@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.paulcoding.pindownloader.App.Companion.appContext
 import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
+import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.extractor.pinterest.PinterestExtractor
 import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.Downloader
@@ -73,10 +74,14 @@ class MainViewModel : ViewModel() {
         _pinDataStateFlow.update { null }
     }
 
-    fun download(link: String) {
+    fun download(link: String, source: PinSource = PinSource.PINTEREST, fileName: String? = null) {
+        val headers =
+            if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()
+
         viewModelScope.launch(Dispatchers.IO) {
             _viewStateFlow.update { State.Downloading }
-            Downloader.download(appContext, link).alsoLog("download path")
+            Downloader.download(appContext, link, fileName, headers)
+                .alsoLog("download path")
             _viewStateFlow.update { State.Idle }
         }
     }

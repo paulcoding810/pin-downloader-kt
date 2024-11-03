@@ -87,6 +87,7 @@ fun PinForm(
     val pinData by viewModel.pinDataStateFlow.collectAsState()
 
     val isLoading = viewState == MainViewModel.State.FetchingImages
+    val isDownloading = viewState == MainViewModel.State.Downloading
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboardManager.current
@@ -215,8 +216,12 @@ fun PinForm(
                     },
                 )
 
-                Button(onClick = { viewModel.download(image) }) {
-                    Text(stringResource(R.string.download_image))
+                Button(onClick = { viewModel.download(image, source) }) {
+                    if (isDownloading) {
+                        Indicator()
+                    } else {
+                        Text(stringResource(R.string.download_image))
+                    }
                 }
             }
         }

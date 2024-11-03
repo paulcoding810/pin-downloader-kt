@@ -6,6 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
 import java.io.File
 import java.io.FileOutputStream
+import io.ktor.client.request.headers
 
 const val folderName = "PinDownloader"
 
@@ -39,17 +40,25 @@ object Downloader {
     suspend fun download(
         context: Context,
         imageUrl: String,
-        fileName: String? = null
+        fileName: String? = null,
+        customHeaders: Map<String, String> = mapOf(),
     ): String? {
         val name = fileName ?: getFileNameFromUrl(imageUrl)
         val file = File(getDownloadDir(context), name)
 
         try {
-            KtorClient.client.get(imageUrl).readRawBytes().let { bytes ->
-                FileOutputStream(file).use { fos ->
-                    fos.write(bytes)
+            KtorClient.client.get(imageUrl) {
+                headers {
+                    customHeaders.forEach { (key, value) ->
+                        append(key, value)
+                    }
                 }
             }
+                .readRawBytes().let { bytes ->
+                    FileOutputStream(file).use { fos ->
+                        fos.write(bytes)
+                    }
+                }
 
             if (file.exists()) {
                 println("Image saved successfully at ${file.absolutePath}")

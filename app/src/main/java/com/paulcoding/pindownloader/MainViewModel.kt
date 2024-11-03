@@ -74,14 +74,21 @@ class MainViewModel : ViewModel() {
         _pinDataStateFlow.update { null }
     }
 
-    fun download(link: String, source: PinSource = PinSource.PINTEREST, fileName: String? = null) {
+    fun download(
+        link: String,
+        source: PinSource = PinSource.PINTEREST,
+        fileName: String? = null,
+        onSuccess: (path: String?) -> Unit = {}
+    ) {
         val headers =
             if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()
 
         viewModelScope.launch(Dispatchers.IO) {
             _viewStateFlow.update { State.Downloading }
-            Downloader.download(appContext, link, fileName, headers)
+
+            val path = Downloader.download(appContext, link, fileName, headers)
                 .alsoLog("download path")
+            onSuccess(path)
             _viewStateFlow.update { State.Idle }
         }
     }

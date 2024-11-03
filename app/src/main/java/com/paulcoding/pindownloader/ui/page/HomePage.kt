@@ -1,0 +1,240 @@
+package com.paulcoding.pindownloader.ui.page
+
+import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil3.compose.SubcomposeAsyncImage
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Scale
+import com.paulcoding.pindownloader.MainViewModel
+import com.paulcoding.pindownloader.R
+import com.paulcoding.pindownloader.extractor.PinData
+import com.paulcoding.pindownloader.extractor.PinSource
+import com.paulcoding.pindownloader.helper.makeToast
+import com.paulcoding.pindownloader.ui.component.Indicator
+import com.paulcoding.pindownloader.ui.component.VideoPlayer
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+@Composable
+fun HomePage(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel,
+) {
+    val viewState by viewModel.viewStateFlow.collectAsState()
+    val pinData by viewModel.pinDataStateFlow.collectAsState()
+
+    val isLoading = viewState == MainViewModel.State.FetchingImages
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val clipboardManager = LocalClipboardManager.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var text by remember { mutableStateOf("https://www.pinterest.com/pin/627478160616463935/") }
+
+    val view = LocalView.current
+
+    fun submit() {
+        if (text.isEmpty()) {
+            makeToast("Input Empty!")
+            return
+        }
+        keyboardController?.hide()
+        viewModel.extract(text)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    coroutineScope.launch {
+                        delay(1000L)
+                        clipboardManager.getText()?.text?.also {
+                            if (it.startsWith("http")) {
+                                if (it != text) {
+                                    text = it
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    Column(modifier = modifier) {
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = text,
+            onValueChange = { text = it },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Go,
+            ),
+            keyboardActions = KeyboardActions(onGo = { submit() }),
+            placeholder = {
+                Text(stringResource(R.string.enter_link))
+            },
+            trailingIcon = {
+                if (text.isNotEmpty()) {
+                    IconButton(onClick = {
+                        text = ""
+                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        viewModel.clearPinData()
+                    }) {
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            imageVector = Icons.Outlined.Clear,
+                            contentDescription = stringResource(R.string.clear),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            },
+        )
+        Button(onClick = { submit() }, enabled = text.isNotEmpty()) {
+            if (isLoading) {
+                Indicator()
+            } else {
+                Text(LocalContext.current.getString(R.string.fetch))
+            }
+        }
+
+        pinData?.let {
+            FetchResult(modifier = Modifier.fillMaxSize(), it, download = viewModel::download)
+        }
+    }
+}
+
+@Composable
+fun FetchResult(
+    modifier: Modifier,
+    pinData: PinData,
+    download: (
+        link: String,
+        source: PinSource,
+        fileName: String?,
+        onSuccess: (path: String?) -> Unit
+    ) -> Unit
+) {
+
+    val scrollState = rememberScrollState()
+    var downloadingVideo by remember { mutableStateOf(false) }
+    var downloadingImage by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier.verticalScroll(scrollState)) {
+        pinData.apply {
+            if (description != null) {
+                Text(description)
+            }
+
+            if (video != null) {
+                VideoPlayer(
+                    videoUri = video,
+                    modifier = Modifier.size(width = 200.dp, height = 300.dp),
+                )
+
+                Button(onClick = {
+                    downloadingVideo = true
+                    download(video, pinData.source, null) {
+                        downloadingVideo = false
+                    }
+                }) {
+                    if (downloadingVideo) {
+                        Indicator()
+                    } else {
+                        Text(stringResource(R.string.download_video))
+                    }
+                }
+            }
+            if (image != null) {
+                val imageRequest =
+                    ImageRequest
+                        .Builder(LocalContext.current)
+                        .data(thumbnail)
+                        .crossfade(true)
+                        .scale(Scale.FILL)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .diskCacheKey(thumbnail)
+                        .run {
+                            if (source == PinSource.PIXIV) {
+                                httpHeaders(
+                                    NetworkHeaders
+                                        .Builder()
+                                        .set("referer", "https://www.pixiv.net/")
+                                        .build(),
+                                )
+                            }
+                            build()
+                        }
+                SubcomposeAsyncImage(
+                    model = imageRequest,
+                    contentDescription = null,
+                    modifier = Modifier.size(width = 200.dp, height = 300.dp),
+                    contentScale = ContentScale.Crop,
+                    loading = {
+                        Indicator()
+                    },
+                )
+
+                Button(onClick = {
+                    downloadingImage = true
+                    download(image, pinData.source, null) {
+                        downloadingImage = false
+                    }
+                }) {
+                    if (downloadingImage) {
+                        Indicator()
+                    } else {
+                        Text(stringResource(R.string.download_image))
+                    }
+                }
+            }
+        }
+    }
+}

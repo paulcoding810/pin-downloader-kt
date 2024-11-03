@@ -96,6 +96,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun extractLink(msg: String) {
+        setLink(msg)
         viewModelScope.launch(Dispatchers.IO) {
             var link: String?
 

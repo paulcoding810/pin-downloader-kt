@@ -144,7 +144,7 @@ fun HomePage(
             },
         )
         Button(onClick = { submit() }, enabled = text.isNotEmpty()) {
-            if (uiState.isFetchingImages) {
+            if (uiState.isFetchingImages || uiState.isRedirectingUrl) {
                 Indicator()
             } else {
                 Text(LocalContext.current.getString(R.string.fetch))

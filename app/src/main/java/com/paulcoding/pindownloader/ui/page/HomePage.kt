@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +48,7 @@ import coil3.request.crossfade
 import coil3.size.Scale
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
+import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.makeToast
@@ -60,17 +62,13 @@ fun HomePage(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
 ) {
-    val viewState by viewModel.viewStateFlow.collectAsState()
-    val pinData by viewModel.pinDataStateFlow.collectAsState()
-
-    val isLoading = viewState == MainViewModel.State.FetchingImages
+    val uiState by viewModel.uiStateFlow.collectAsState()
+    val text = uiState.input
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboardManager.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
-
-    val text by viewModel.urlStateFlow.collectAsState()
 
     val view = LocalView.current
 
@@ -81,6 +79,17 @@ fun HomePage(
         }
         keyboardController?.hide()
         viewModel.extractLink(text)
+    }
+
+    LaunchedEffect(uiState.exception) {
+        uiState.exception?.let {
+
+            when (it.message) {
+                ExtractorError.PIN_NOT_FOUND -> makeToast(R.string.pin_not_found)
+                ExtractorError.CANNOT_PARSE_JSON -> makeToast(R.string.failed_to_fetch_images)
+                else -> makeToast(it.message ?: it.toString())
+            }
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -135,14 +144,14 @@ fun HomePage(
             },
         )
         Button(onClick = { submit() }, enabled = text.isNotEmpty()) {
-            if (isLoading) {
+            if (uiState.isFetchingImages) {
                 Indicator()
             } else {
                 Text(LocalContext.current.getString(R.string.fetch))
             }
         }
 
-        pinData?.let {
+        uiState.pinData?.let {
             FetchResult(modifier = Modifier.fillMaxSize(), it, download = viewModel::download)
         }
     }

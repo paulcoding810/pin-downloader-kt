@@ -2,11 +2,12 @@ package com.paulcoding.pindownloader.helper
 
 import android.content.Context
 import android.os.Environment
+import com.paulcoding.pindownloader.extractor.ExtractorError
 import io.ktor.client.request.get
+import io.ktor.client.request.headers
 import io.ktor.client.statement.readRawBytes
 import java.io.File
 import java.io.FileOutputStream
-import io.ktor.client.request.headers
 
 const val folderName = "PinDownloader"
 
@@ -42,11 +43,11 @@ object Downloader {
         imageUrl: String,
         fileName: String? = null,
         customHeaders: Map<String, String> = mapOf(),
-    ): String? {
-        val name = fileName ?: getFileNameFromUrl(imageUrl)
-        val file = File(getDownloadDir(context), name)
+    ): Result<String> {
+        return runCatching {
+            val name = fileName ?: getFileNameFromUrl(imageUrl)
+            val file = File(getDownloadDir(context), name)
 
-        try {
             KtorClient.client.get(imageUrl) {
                 headers {
                     customHeaders.forEach { (key, value) ->
@@ -62,15 +63,10 @@ object Downloader {
 
             if (file.exists()) {
                 println("Image saved successfully at ${file.absolutePath}")
-                return file.absolutePath
-            } else {
-                println("Failed to save image.")
+                return@runCatching file.absolutePath
             }
-        } catch (e: Exception) {
-            println("Failed to download image: ${e.message}")
-        } finally {
-        }
+            throw Exception(ExtractorError.FAILED_TO_DOWNLOAD)
 
-        return null
+        }
     }
 }

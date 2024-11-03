@@ -10,99 +10,89 @@ import com.paulcoding.pindownloader.extractor.pinterest.PinterestExtractor
 import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.alsoLog
-import com.paulcoding.pindownloader.helper.log
-import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.helper.resolveRedirectedUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainViewModel : ViewModel() {
-    private var _viewStateFlow = MutableStateFlow<State>(State.Idle)
-    val viewStateFlow = _viewStateFlow.asStateFlow()
-
-    private var _pinDataStateFlow = MutableStateFlow<PinData?>(null)
-    val pinDataStateFlow = _pinDataStateFlow.asStateFlow()
-
-    private var _urlStateFlow = MutableStateFlow("")
-    val urlStateFlow = _urlStateFlow.asStateFlow()
+    private var _uiStateFlow = MutableStateFlow(UiState())
+    val uiStateFlow = _uiStateFlow.asStateFlow()
 
     private val pinterestExtractor = PinterestExtractor()
     private val pixivExtractor = PixivExtractor()
 
-    sealed class State {
-        data object Idle : State()
-
-        data object FetchingImages : State()
-        data object Downloading : State()
-    }
+    data class UiState(
+        val input: String = "",
+        val exception: Throwable? = null,
+        val pinData: PinData? = null,
+        val isFetchingImages: Boolean = false,
+        val isRedirectingUrl: Boolean = false,
+        val isDownloadingImage: Boolean = false,
+        val isDownloadingVideo: Boolean = false
+    )
 
     private suspend fun extract(link: String) {
-        _pinDataStateFlow.update { null }
+        _uiStateFlow.update { UiState().copy(input = link) }
 
         val extractor =
             when {
                 pinterestExtractor.isMatches(link) -> pinterestExtractor
                 pixivExtractor.isMatches(link) -> pixivExtractor
                 else -> null
-            } ?: return onFetchError(Exception(ExtractorError.INVALID_URL))
+            }
 
-        _viewStateFlow.update { State.FetchingImages }
+        if (extractor == null) {
+            setError(Exception(ExtractorError.INVALID_URL))
+            return
+        }
+
+        _uiStateFlow.update { it.copy(isFetchingImages = true) }
 
         extractor
             .extract(link)
             .alsoLog("pin extraction")
             .onSuccess { data ->
-                _pinDataStateFlow.update { data }
+                _uiStateFlow.update { it.copy(pinData = data) }
+
             }.onFailure { throwable ->
-                onFetchError(throwable)
+                setError(throwable)
             }
 
-        _viewStateFlow.update { State.Idle }
+        _uiStateFlow.update { it.copy(isFetchingImages = false) }
     }
 
-    private suspend fun onFetchError(e: Throwable) {
-        withContext(Dispatchers.Main) {
-
-            when (e.message) {
-                ExtractorError.PIN_NOT_FOUND -> makeToast(R.string.pin_not_found)
-                ExtractorError.CANNOT_PARSE_JSON -> makeToast(R.string.failed_to_fetch_images)
-                else -> makeToast(e.message ?: e.toString())
-            }
-
-            e.printStackTrace()
-        }
+    private fun setError(throwable: Throwable) {
+        _uiStateFlow.update { it.copy(exception = throwable) }
     }
 
     fun clearPinData() {
-        _urlStateFlow.update { "" }
-        _pinDataStateFlow.update { null }
+        _uiStateFlow.update { UiState() }
     }
 
     fun download(
         link: String,
         source: PinSource = PinSource.PINTEREST,
         fileName: String? = null,
-        onSuccess: (path: String?) -> Unit = {}
+        onSuccess: (path: String) -> Unit = {}
     ) {
         val headers =
             if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()
 
         viewModelScope.launch(Dispatchers.IO) {
-            _viewStateFlow.update { State.Downloading }
-
-            val path = Downloader.download(appContext, link, fileName, headers)
+            _uiStateFlow.update { it.copy(isDownloadingImage = true) }
+            Downloader.download(appContext, link, fileName, headers)
                 .alsoLog("download path")
-            onSuccess(path)
-            _viewStateFlow.update { State.Idle }
+                .onSuccess(onSuccess)
+                .onFailure { setError(it) }
+            _uiStateFlow.update { it.copy(isDownloadingImage = false) }
         }
     }
 
     fun setLink(link: String) {
-        _urlStateFlow.update { link }
+        _uiStateFlow.update { it.copy(input = link) }
     }
 
     fun extractLink(msg: String) {
@@ -120,20 +110,20 @@ class MainViewModel : ViewModel() {
 
             if (isRedirected) {
                 try {
-                    _viewStateFlow.update { State.FetchingImages }
+                    _uiStateFlow.update { it.copy(isRedirectingUrl = true) }
                     link = resolveRedirectedUrl(link).alsoLog("redirectedUrl")
                 } catch (e: Exception) {
-                    onFetchError(e)
+                    setError(e)
                 } finally {
-                    _viewStateFlow.update { State.Idle }
+                    _uiStateFlow.update { it.copy(isRedirectingUrl = false) }
                 }
             }
 
             if (link != null) {
-                _urlStateFlow.update { link }
+                setLink(link)
                 extract(link)
             } else {
-                log("Invalid URL")
+                setError(Exception(ExtractorError.INVALID_URL))
             }
         }
     }

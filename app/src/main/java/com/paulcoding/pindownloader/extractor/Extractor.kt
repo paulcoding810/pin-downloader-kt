@@ -62,6 +62,7 @@ abstract class Extractor {
 }
 
 object ExtractorError {
+    const val FAILED_TO_DOWNLOAD = "Failed to download image."
     const val INVALID_URL = "Invalid URL."
     const val PIN_NOT_FOUND = "Pin not found."
     const val CANNOT_PARSE_ID = "Cannot parse Id."

@@ -70,7 +70,7 @@ fun HomePage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
 
-    var text by remember { mutableStateOf("https://www.pinterest.com/pin/627478160616463935/") }
+    val text by viewModel.urlStateFlow.collectAsState()
 
     val view = LocalView.current
 
@@ -80,7 +80,7 @@ fun HomePage(
             return
         }
         keyboardController?.hide()
-        viewModel.extract(text)
+        viewModel.extractLink(text)
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -90,10 +90,8 @@ fun HomePage(
                     coroutineScope.launch {
                         delay(1000L)
                         clipboardManager.getText()?.text?.also {
-                            if (it.startsWith("http")) {
-                                if (it != text) {
-                                    text = it
-                                }
+                            if (it.startsWith("http") && it != text) {
+                                viewModel.setLink(it)
                             }
                         }
                     }
@@ -111,7 +109,7 @@ fun HomePage(
         TextField(
             modifier = Modifier.fillMaxWidth(),
             value = text,
-            onValueChange = { text = it },
+            onValueChange = { viewModel.setLink(it) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Go,
@@ -123,7 +121,6 @@ fun HomePage(
             trailingIcon = {
                 if (text.isNotEmpty()) {
                     IconButton(onClick = {
-                        text = ""
                         view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                         viewModel.clearPinData()
                     }) {

@@ -10,7 +10,9 @@ import com.paulcoding.pindownloader.extractor.pinterest.PinterestExtractor
 import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.alsoLog
+import com.paulcoding.pindownloader.helper.log
 import com.paulcoding.pindownloader.helper.makeToast
+import com.paulcoding.pindownloader.helper.resolveRedirectedUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +27,9 @@ class MainViewModel : ViewModel() {
     private var _pinDataStateFlow = MutableStateFlow<PinData?>(null)
     val pinDataStateFlow = _pinDataStateFlow.asStateFlow()
 
+    private var _urlStateFlow = MutableStateFlow("")
+    val urlStateFlow = _urlStateFlow.asStateFlow()
+
     private val pinterestExtractor = PinterestExtractor()
     private val pixivExtractor = PixivExtractor()
 
@@ -35,7 +40,9 @@ class MainViewModel : ViewModel() {
         data object Downloading : State()
     }
 
-    fun extract(link: String) {
+    private suspend fun extract(link: String) {
+        _pinDataStateFlow.update { null }
+
         val extractor =
             when {
                 pinterestExtractor.isMatches(link) -> pinterestExtractor
@@ -43,34 +50,35 @@ class MainViewModel : ViewModel() {
                 else -> null
             } ?: return onFetchError(Exception(ExtractorError.INVALID_URL))
 
-        viewModelScope.launch(Dispatchers.IO) {
-            _viewStateFlow.update { State.FetchingImages }
-            extractor
-                .extract(link)
-                .alsoLog("pin extraction")
-                .onSuccess { data ->
-                    _pinDataStateFlow.update { data }
-                }.onFailure { throwable ->
-                    withContext(Dispatchers.Main) {
-                        onFetchError(throwable)
-                    }
-                }
+        _viewStateFlow.update { State.FetchingImages }
 
-            _viewStateFlow.update { State.Idle }
-        }
+        extractor
+            .extract(link)
+            .alsoLog("pin extraction")
+            .onSuccess { data ->
+                _pinDataStateFlow.update { data }
+            }.onFailure { throwable ->
+                onFetchError(throwable)
+            }
+
+        _viewStateFlow.update { State.Idle }
     }
 
-    private fun onFetchError(e: Throwable) {
-        when (e.message) {
-            ExtractorError.PIN_NOT_FOUND -> makeToast(R.string.pin_not_found)
-            ExtractorError.CANNOT_PARSE_JSON -> makeToast(R.string.failed_to_fetch_images)
-            else -> makeToast(e.message ?: e.toString())
-        }
+    private suspend fun onFetchError(e: Throwable) {
+        withContext(Dispatchers.Main) {
 
-        e.printStackTrace()
+            when (e.message) {
+                ExtractorError.PIN_NOT_FOUND -> makeToast(R.string.pin_not_found)
+                ExtractorError.CANNOT_PARSE_JSON -> makeToast(R.string.failed_to_fetch_images)
+                else -> makeToast(e.message ?: e.toString())
+            }
+
+            e.printStackTrace()
+        }
     }
 
     fun clearPinData() {
+        _urlStateFlow.update { "" }
         _pinDataStateFlow.update { null }
     }
 
@@ -90,6 +98,43 @@ class MainViewModel : ViewModel() {
                 .alsoLog("download path")
             onSuccess(path)
             _viewStateFlow.update { State.Idle }
+        }
+    }
+
+    fun setLink(link: String) {
+        _urlStateFlow.update { link }
+    }
+
+    fun extractLink(msg: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            var link: String?
+
+            val urlPattern = """(https?://\S+)""".toRegex()
+
+            link = urlPattern.find(msg)?.value
+
+            if (link == null)
+                return@launch
+
+            val isRedirected = """https?://pin.it/\S+""".toRegex().matches(link)
+
+            if (isRedirected) {
+                try {
+                    _viewStateFlow.update { State.FetchingImages }
+                    link = resolveRedirectedUrl(link).alsoLog("redirectedUrl")
+                } catch (e: Exception) {
+                    onFetchError(e)
+                } finally {
+                    _viewStateFlow.update { State.Idle }
+                }
+            }
+
+            if (link != null) {
+                _urlStateFlow.update { link }
+                extract(link)
+            } else {
+                log("Invalid URL")
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.paulcoding.pindownloader
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,10 +15,12 @@ import com.paulcoding.pindownloader.ui.page.HomePage
 import com.paulcoding.pindownloader.ui.theme.PinDownloaderTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var viewModel: MainViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModel: MainViewModel = ViewModelProvider(this).get()
+        viewModel = ViewModelProvider(this).get()
 
         enableEdgeToEdge()
         setContent {
@@ -29,6 +32,30 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val message = when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                intent.dataString
+            }
+
+            Intent.ACTION_SEND -> {
+                intent.getStringExtra(Intent.EXTRA_TEXT)
+            }
+
+            else -> null
+        }
+
+        message?.also {
+            viewModel.extractLink(it)
         }
     }
 }

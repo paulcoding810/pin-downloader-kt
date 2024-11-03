@@ -33,6 +33,17 @@ jobs:
           api-level: ${{ env.ANDROID_API_LEVEL }}
           build-tools: ${{ env.ANDROID_BUILD_TOOLS_VERSION }}
 
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-
+
       - name: Run tests
         id: test
         run: ./gradlew test

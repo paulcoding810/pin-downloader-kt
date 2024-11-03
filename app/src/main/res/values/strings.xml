@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Pin Dowloader</string>
+    <string name="invalid_url">Invalid url</string>
+    <string name="failed_to_fetch_images">Failed to fetch images</string>
+    <string name="clear">Clear</string>
+    <string name="fetch">Fetch</string>
+    <string name="enter_link">Enter Link</string>
+    <string name="pin_not_found">Pin not found.</string>
+    <string name="download_video">Download Video</string>
+    <string name="download_image">Download Image</string>
+</resources>

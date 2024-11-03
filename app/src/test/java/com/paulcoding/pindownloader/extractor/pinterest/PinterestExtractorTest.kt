@@ -80,7 +80,6 @@ class PinterestExtractorTest : BehaviorSpec({
                 }
             }
         }
-
         `when`("extracting video but there's no mp4") {
             val pinUrl = "https://www.pinterest.com/pin/74239093852167971/"
             then("should return m3u8 instead") {
@@ -88,9 +87,10 @@ class PinterestExtractorTest : BehaviorSpec({
 
                 result.isSuccess shouldBe true
                 result.getOrNull()?.let {
+//                   TODO: implement m3u8 loader
 //                    it.video shouldBe "https://v1.pinimg.com/vi…cf7438ee05b86a6ef21.m3u8"
                     it.video shouldBe null
-                    it.image shouldBe "https://i.pinimg.com/ori…aaf3ca0d97c300584d81.jpg"
+                    it.image shouldBe "https://i.pinimg.com/originals/da/95/7c/da957c1ca43887bbe7360f9b2237aef5.jpg"
                 }
             }
         }

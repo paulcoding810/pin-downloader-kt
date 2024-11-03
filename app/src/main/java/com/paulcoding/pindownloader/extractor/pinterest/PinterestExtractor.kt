@@ -63,26 +63,9 @@ class PinterestExtractor : Extractor() {
                     link = link,
                 )
 
-            if (videos != null) {
-                val url = videos["V_720P"]?.url ?: videos[""]
-                pinData =
-                    pinData.copy(
-                        video =
-                        videos.values
-                            .map { it.url }
-                            .find { it.contains("mp4") },
-                    )
-            }
-
-            if (storyVideos != null) {
-                pinData =
-                    pinData.copy(
-                        video =
-                        storyVideos.values
-                            .map { it.url }
-                            .find { it.contains("mp4") },
-                    )
-            }
+            pinData = pinData.copy(
+                video = getVideoUrl(videos) ?: getVideoUrl(storyVideos),
+            )
 
             if (images != null) {
                 val origin = images["orig"]?.url ?: images.values.lastOrNull()?.url
@@ -97,5 +80,15 @@ class PinterestExtractor : Extractor() {
             return pinData
         }
         throw Exception(ExtractorError.CANNOT_PARSE_JSON)
+    }
+
+    private fun getVideoUrl(videos: Map<String, PinImage>?): String? {
+        if (videos == null) return null
+        val url = videos["V_720P"]?.url
+            ?: videos["V_EXP7"]?.url
+            ?: videos.values
+                .map { it.url }
+                .find { it.contains("mp4") }
+        return url
     }
 }

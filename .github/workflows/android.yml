@@ -34,8 +34,24 @@ jobs:
           build-tools: ${{ env.ANDROID_BUILD_TOOLS_VERSION }}
 
       - name: Run tests
+        id: test
         run: ./gradlew test
-        continue-on-error: false
+        continue-on-error: true
+
+      - name: Upload test reports
+        if: ${{ failure() || steps.test.outcome == 'failure' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/androidTests/
+            **/build/test-results/
+          retention-days: 7
+
+      - name: Check test results
+        if: ${{ steps.test.outcome == 'failure' }}
+        run: exit 1
 
       - name: Build app
         if: success()

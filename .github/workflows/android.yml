@@ -66,6 +66,7 @@ jobs:
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          buildToolsVersion: ${{ env.ANDROID_BUILD_TOOLS_VERSION }}
 
       - name: Upload APK artifact
         if: success()

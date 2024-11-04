@@ -106,7 +106,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun extractLink(msg: String) {
-        setLink(msg)
+        _uiStateFlow.update { UiState().copy(input = msg) }
         viewModelScope.launch(Dispatchers.IO) {
             var link: String?
 

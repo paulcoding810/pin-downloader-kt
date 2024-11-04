@@ -1,5 +1,6 @@
 package com.paulcoding.pindownloader.ui.page
 
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +44,9 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.rememberPermissionState
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.ExtractorError
@@ -154,6 +158,7 @@ fun HomePage(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun FetchResult(
     modifier: Modifier,
@@ -164,6 +169,22 @@ fun FetchResult(
 
     val uiState by viewModel.uiStateFlow.collectAsState()
     val pinData = uiState.pinData
+
+
+    val storagePermission =
+        rememberPermissionState(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) { granted ->
+            if (!granted)
+                makeToast("Permission Denied!")
+        }
+
+    fun checkPermissionOrDownload(block: () -> Unit) {
+//        TODO: Check network
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || storagePermission.status == PermissionStatus.Granted) {
+            block()
+        } else {
+            storagePermission.launchPermissionRequest()
+        }
+    }
 
     Column(modifier = modifier.verticalScroll(scrollState)) {
         pinData?.apply {
@@ -178,7 +199,9 @@ fun FetchResult(
                 )
 
                 Button(onClick = {
-                    viewModel.download(video, PinType.VIDEO, pinData.source, null)
+                    checkPermissionOrDownload {
+                        viewModel.download(video, PinType.VIDEO, pinData.source, null)
+                    }
                 }) {
                     if (uiState.isDownloadingVideo) {
                         Indicator()
@@ -218,7 +241,9 @@ fun FetchResult(
                 )
 
                 Button(onClick = {
-                    viewModel.download(image, PinType.IMAGE, pinData.source, null) {
+                    checkPermissionOrDownload {
+                        viewModel.download(image, PinType.IMAGE, pinData.source, null) {
+                        }
                     }
                 }) {
                     if (uiState.isDownloadingImage) {

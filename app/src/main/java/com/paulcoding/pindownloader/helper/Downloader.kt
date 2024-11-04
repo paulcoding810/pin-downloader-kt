@@ -13,23 +13,16 @@ const val folderName = "PinDownloader"
 
 object Downloader {
     private fun getFileNameFromUrl(url: String): String {
-
         val trimmedUrl = url.removeSuffix("/")
-        log(url, "url")
-        log(trimmedUrl, "trimmed")
         return trimmedUrl.substringAfterLast("/")
     }
 
     private fun getDownloadDir(context: Context): File {
         val downloadDir =
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), folderName)
-            } else {
-                File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    folderName
-                )
-            }
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                folderName
+            )
 
         // Create the directory if it doesn't exist
         if (!downloadDir.exists()) {

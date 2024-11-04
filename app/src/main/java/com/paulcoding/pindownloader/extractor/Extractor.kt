@@ -88,6 +88,12 @@ enum class PinSource {
     PIXIV,
 }
 
+enum class PinType {
+    IMAGE,
+    VIDEO,
+    GIF
+}
+
 @Serializable
 data class PinImage(
     val height: Int,

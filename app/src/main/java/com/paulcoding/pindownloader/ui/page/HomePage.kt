@@ -22,10 +22,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -49,8 +46,8 @@ import coil3.size.Scale
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.ExtractorError
-import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
+import com.paulcoding.pindownloader.extractor.PinType
 import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.component.VideoPlayer
@@ -152,7 +149,7 @@ fun HomePage(
         }
 
         uiState.pinData?.let {
-            FetchResult(modifier = Modifier.fillMaxSize(), it, download = viewModel::download)
+            FetchResult(modifier = Modifier.fillMaxSize(), viewModel)
         }
     }
 }
@@ -160,21 +157,16 @@ fun HomePage(
 @Composable
 fun FetchResult(
     modifier: Modifier,
-    pinData: PinData,
-    download: (
-        link: String,
-        source: PinSource,
-        fileName: String?,
-        onSuccess: (path: String?) -> Unit
-    ) -> Unit
+    viewModel: MainViewModel
 ) {
 
     val scrollState = rememberScrollState()
-    var downloadingVideo by remember { mutableStateOf(false) }
-    var downloadingImage by remember { mutableStateOf(false) }
+
+    val uiState by viewModel.uiStateFlow.collectAsState()
+    val pinData = uiState.pinData
 
     Column(modifier = modifier.verticalScroll(scrollState)) {
-        pinData.apply {
+        pinData?.apply {
             if (description != null) {
                 Text(description)
             }
@@ -186,12 +178,9 @@ fun FetchResult(
                 )
 
                 Button(onClick = {
-                    downloadingVideo = true
-                    download(video, pinData.source, null) {
-                        downloadingVideo = false
-                    }
+                    viewModel.download(video, PinType.VIDEO, pinData.source, null)
                 }) {
-                    if (downloadingVideo) {
+                    if (uiState.isDownloadingVideo) {
                         Indicator()
                     } else {
                         Text(stringResource(R.string.download_video))
@@ -229,12 +218,10 @@ fun FetchResult(
                 )
 
                 Button(onClick = {
-                    downloadingImage = true
-                    download(image, pinData.source, null) {
-                        downloadingImage = false
+                    viewModel.download(image, PinType.IMAGE, pinData.source, null) {
                     }
                 }) {
-                    if (downloadingImage) {
+                    if (uiState.isDownloadingImage) {
                         Indicator()
                     } else {
                         Text(stringResource(R.string.download_image))

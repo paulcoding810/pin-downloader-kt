@@ -43,14 +43,14 @@ class PixivExtractor : Extractor() {
 
     override suspend fun callApi(apiUrl: String): JsonElement {
         val response =
-            KtorClient.client
-                .get(apiUrl)
-                .apply {
-                    if (status != HttpStatusCode.OK) {
-                        throw (Exception(ExtractorError.PIN_NOT_FOUND))
-                    }
-                }.body<String>()
-
+            KtorClient.client.use { client ->
+                client.get(apiUrl)
+                    .apply {
+                        if (status != HttpStatusCode.OK) {
+                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                        }
+                    }.body<String>()
+            }
         val doc: Document = Ksoup.parse(html = response)
         val preloadDataEle = doc.getElementById("meta-preload-data")
 

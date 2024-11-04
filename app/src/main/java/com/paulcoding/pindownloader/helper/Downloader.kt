@@ -48,18 +48,20 @@ object Downloader {
             val name = fileName ?: getFileNameFromUrl(imageUrl)
             val file = File(getDownloadDir(context), name)
 
-            KtorClient.client.get(imageUrl) {
-                headers {
-                    customHeaders.forEach { (key, value) ->
-                        append(key, value)
+            KtorClient.client.use { client ->
+                client.get(imageUrl) {
+                    headers {
+                        customHeaders.forEach { (key, value) ->
+                            append(key, value)
+                        }
                     }
                 }
+                    .readRawBytes().let { bytes ->
+                        FileOutputStream(file).use { fos ->
+                            fos.write(bytes)
+                        }
+                    }
             }
-                .readRawBytes().let { bytes ->
-                    FileOutputStream(file).use { fos ->
-                        fos.write(bytes)
-                    }
-                }
 
             if (file.exists()) {
                 println("Image saved successfully at ${file.absolutePath}")

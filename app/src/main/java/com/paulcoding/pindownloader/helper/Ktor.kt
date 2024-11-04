@@ -10,16 +10,17 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 
 object KtorClient {
-    val client =
-        HttpClient(CIO) {
-            engine {
-                requestTimeout = 8000
+    val client: HttpClient
+        get() =
+            HttpClient(CIO) {
+                engine {
+                    requestTimeout = 8000
+                }
+                install(ContentNegotiation) {
+                    json(CustomJson)
+                }
+                install(HttpTimeout)
             }
-            install(ContentNegotiation) {
-                json(CustomJson)
-            }
-            install(HttpTimeout)
-        }
 }
 
 suspend fun resolveRedirectedUrl(shortUrl: String): String? {

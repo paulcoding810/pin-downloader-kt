@@ -39,13 +39,14 @@ abstract class Extractor {
 
     protected open suspend fun callApi(apiUrl: String): JsonElement {
         val response =
-            KtorClient.client
-                .get(apiUrl)
-                .apply {
-                    if (status != HttpStatusCode.OK) {
-                        throw (Exception(ExtractorError.PIN_NOT_FOUND))
-                    }
-                }.body<JsonElement>()
+            KtorClient.client.use { client ->
+                client.get(apiUrl)
+                    .apply {
+                        if (status != HttpStatusCode.OK) {
+                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                        }
+                    }.body<JsonElement>()
+            }
 
         return response
     }

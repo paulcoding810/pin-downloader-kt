@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,6 +23,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(
@@ -28,6 +33,15 @@ android {
                 "proguard-rules.pro",
             )
         }
+    }
+    applicationVariants.all {
+        outputs.forEach { output ->
+            (output as BaseVariantOutputImpl).outputFileName = "PinDownloader.apk"
+        }
+    }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

@@ -11,7 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
-import com.paulcoding.pindownloader.ui.page.HomePage
+import com.paulcoding.pindownloader.ui.page.AppEntry
 import com.paulcoding.pindownloader.ui.theme.PinDownloaderTheme
 
 class MainActivity : ComponentActivity() {
@@ -26,10 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PinDownloaderTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomePage(
-                        modifier = Modifier.padding(innerPadding),
-                        viewModel = viewModel,
-                    )
+                    AppEntry(viewModel = viewModel, modifier = Modifier.padding(innerPadding))
                 }
             }
         }

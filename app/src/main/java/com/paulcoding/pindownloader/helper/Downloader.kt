@@ -1,7 +1,6 @@
 package com.paulcoding.pindownloader.helper
 
 import android.content.Context
-import android.os.Environment
 import com.paulcoding.pindownloader.extractor.ExtractorError
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
@@ -9,7 +8,6 @@ import io.ktor.client.statement.readRawBytes
 import java.io.File
 import java.io.FileOutputStream
 
-const val folderName = "PinDownloader"
 
 object Downloader {
     private fun getFileNameFromUrl(url: String): String {
@@ -18,13 +16,6 @@ object Downloader {
     }
 
     private fun getDownloadDir(context: Context): File {
-        val downloadDir =
-            File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                folderName
-            )
-
-        // Create the directory if it doesn't exist
         if (!downloadDir.exists()) {
             downloadDir.mkdirs()
         }
@@ -57,11 +48,9 @@ object Downloader {
             }
 
             if (file.exists()) {
-                println("Image saved successfully at ${file.absolutePath}")
                 return@runCatching file.absolutePath
             }
             throw Exception(ExtractorError.FAILED_TO_DOWNLOAD)
-
         }
     }
 }

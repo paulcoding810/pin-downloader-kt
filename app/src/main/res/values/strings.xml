@@ -8,4 +8,7 @@
     <string name="pin_not_found">Pin not found.</string>
     <string name="download_video">Download Video</string>
     <string name="download_image">Download Image</string>
+    <string name="share_pin">Share Pin</string>
+    <string name="failed_to_get_files">Failed to get file!</string>
+    <string name="failed_to_view_file">Failed to view file</string>
 </resources>

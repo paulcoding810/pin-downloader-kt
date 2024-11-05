@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 fun HomePage(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
+    viewHistory: () -> Unit,
 ) {
     val uiState by viewModel.uiStateFlow.collectAsState()
     val text = uiState.input
@@ -116,6 +117,9 @@ fun HomePage(
     }
 
     Column(modifier = modifier) {
+        Button(onClick = viewHistory) {
+            Text("History")
+        }
         TextField(
             modifier = Modifier.fillMaxWidth(),
             value = text,

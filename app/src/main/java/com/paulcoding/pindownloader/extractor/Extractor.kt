@@ -81,7 +81,12 @@ data class PinData(
     val date: String?,
     val image: String? = null,
     val video: String? = null,
-)
+) {
+    val isPixiv =  source == PinSource.PIXIV
+    val isPinterest = source == PinSource.PINTEREST
+    val isVideo = video != null
+    val isImage = image != null && video == null
+}
 
 enum class PinSource {
     PINTEREST,

@@ -42,7 +42,7 @@ fun FetchResult(
 ) {
     val uiState by viewModel.uiStateFlow.collectAsState()
     val pinData = uiState.pinData
-
+    val isPremium by viewModel.isPremium.collectAsState()
 
     val storagePermission =
         rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE) { granted ->
@@ -115,14 +115,14 @@ fun FetchResult(
 
                 Button(onClick = {
                     checkPermissionOrDownload {
-                        viewModel.download(image, PinType.IMAGE, pinData.source, null) {
-                        }
+                        viewModel.download(image, PinType.IMAGE, pinData.source, null)
                     }
                 }) {
                     if (uiState.isDownloadingImage) {
                         Indicator()
                     } else {
                         Text(stringResource(R.string.download_image))
+                        if (isPixiv && !isPremium) Text(" 👑")
                     }
                 }
             }

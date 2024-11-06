@@ -52,6 +52,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -83,6 +84,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.mmkv)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

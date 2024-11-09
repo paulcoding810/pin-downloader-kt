@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.mmkv)
+    implementation(libs.billing.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

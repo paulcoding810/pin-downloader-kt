@@ -6,16 +6,17 @@ fun log(
     message: Any?,
     tag: String? = "pinDownloader",
 ) {
-    if (BuildConfig.DEBUG)
-        return
-    val border = "*".repeat(150)
-    println("\n")
-    println(border)
-    print("\t")
-    println("$tag:")
-    print("\t")
-    println(message)
-    println(border)
+    if (BuildConfig.DEBUG) {
+        val border = "*".repeat(150)
+        println("\n")
+        println(border)
+        print("\t")
+        println("$tag:")
+        print("\t")
+        println(message)
+        println(border)
+        println("\n")
+    }
 }
 
 fun <T> T.alsoLog(tag: String? = "pinDownloader"): T {

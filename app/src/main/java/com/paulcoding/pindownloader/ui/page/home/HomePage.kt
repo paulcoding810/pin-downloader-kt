@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
@@ -53,6 +54,7 @@ fun HomePage(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
     viewHistory: () -> Unit,
+    navToPremium: () -> Unit,
 ) {
     val uiState by viewModel.uiStateFlow.collectAsState()
     val text = uiState.input
@@ -116,6 +118,9 @@ fun HomePage(
                     IconButton(onClick = viewHistory) {
                         Icon(Icons.AutoMirrored.Outlined.List, "History")
                     }
+//                    IconButton(onClick = navToPremium) {
+//                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Premium")
+//                    }
                 },
             )
         }

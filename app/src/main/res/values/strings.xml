@@ -12,4 +12,6 @@
     <string name="failed_to_get_files">Failed to get file!</string>
     <string name="failed_to_view_file">Failed to view file</string>
     <string name="delete_images">Delete Images</string>
+    <string name="downloaded_successfully">Downloaded successfully!</string>
+    <string name="view">View</string>
 </resources>

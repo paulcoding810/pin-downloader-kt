@@ -33,6 +33,7 @@ import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.extractor.PinType
 import com.paulcoding.pindownloader.helper.makeToast
+import com.paulcoding.pindownloader.helper.viewFile
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.component.VideoPlayer
 
@@ -40,8 +41,15 @@ import com.paulcoding.pindownloader.ui.component.VideoPlayer
 @Composable
 fun FetchResult(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    showSnackbar: (
+        message: String,
+        actionLabel: String,
+        block: () -> Unit
+    ) -> Unit,
 ) {
+    val context = LocalContext.current
+
     val uiState by viewModel.uiStateFlow.collectAsState()
     val pinData = uiState.pinData
     val isPremium by viewModel.isPremium.collectAsState()
@@ -51,6 +59,16 @@ fun FetchResult(
             if (!granted)
                 makeToast("Permission Denied!")
         }
+
+
+    fun onSuccess(path: String) {
+        showSnackbar(
+            context.getString(R.string.downloaded_successfully),
+            context.getString(R.string.view)
+        ) {
+            viewFile(context, path)
+        }
+    }
 
     fun checkPermissionOrDownload(block: () -> Unit) {
 //        TODO: Check network
@@ -80,7 +98,14 @@ fun FetchResult(
 
                 Button(onClick = {
                     checkPermissionOrDownload {
-                        viewModel.download(video, PinType.VIDEO, pinData.source, null)
+                        viewModel.download(
+                            video,
+                            PinType.VIDEO,
+                            pinData.source,
+                            null,
+                        ) {
+                            onSuccess(it)
+                        }
                     }
                 }) {
                     if (uiState.isDownloadingVideo) {
@@ -122,7 +147,9 @@ fun FetchResult(
 
                 Button(onClick = {
                     checkPermissionOrDownload {
-                        viewModel.download(image, PinType.IMAGE, pinData.source, null)
+                        viewModel.download(image, PinType.IMAGE, pinData.source, null) {
+                            onSuccess(it)
+                        }
                     }
                 }) {
                     if (uiState.isDownloadingImage) {

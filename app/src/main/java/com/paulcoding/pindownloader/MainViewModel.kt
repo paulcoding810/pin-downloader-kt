@@ -97,7 +97,9 @@ class MainViewModel : ViewModel() {
             }
             Downloader.download(appContext, link, fileName, headers)
                 .alsoLog("download path")
-                .onSuccess(onSuccess)
+                .onSuccess {
+                    onSuccess(it)
+                }
                 .onFailure { setError(it) }
             if (type == PinType.VIDEO) {
                 _uiStateFlow.update { it.copy(isDownloadingVideo = false) }

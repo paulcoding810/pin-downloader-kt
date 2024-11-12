@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +47,7 @@ import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.ui.component.Indicator
+import com.paulcoding.pindownloader.ui.icon.History
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -128,7 +128,7 @@ fun HomePage(
                 modifier = Modifier.padding(8.dp),
                 actions = {
                     IconButton(onClick = viewHistory) {
-                        Icon(Icons.AutoMirrored.Outlined.List, "History")
+                        Icon(History, "History")
                     }
 //                    IconButton(onClick = navToPremium) {
 //                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Premium")

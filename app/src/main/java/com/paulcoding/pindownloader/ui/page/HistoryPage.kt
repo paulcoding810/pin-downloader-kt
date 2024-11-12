@@ -1,13 +1,13 @@
 package com.paulcoding.pindownloader.ui.page
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -50,7 +52,8 @@ fun HistoryPage(goBack: () -> Unit) {
     val context = LocalContext.current
     var files by remember { mutableStateOf(listOf<String>()) }
 
-    val scrollState = rememberScrollState()
+    val configuration = LocalConfiguration.current
+    val itemWidth = (configuration.screenWidthDp.dp - 24.dp) / 2
 
     LaunchedEffect(Unit) {
         getFiles(context).onSuccess {
@@ -91,15 +94,19 @@ fun HistoryPage(goBack: () -> Unit) {
                 })
         }
     ) { paddingValues ->
-        Column(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
+                .padding(horizontal = 8.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            files.map {
+            items(files.size) { index ->
+                val file = files[index]
                 Box(modifier = Modifier.clickable(onClick = {
-                    viewFile(context, it)
+                    viewFile(context, file)
                         .onFailure {
                             it.printStackTrace()
                             makeToast(it.message ?: context.getString(R.string.failed_to_view_file))
@@ -107,11 +114,12 @@ fun HistoryPage(goBack: () -> Unit) {
                 })) {
                     Box {
                         AsyncImage(
-                            model = it,
+                            model = file,
                             contentDescription = null,
-                            modifier = Modifier.size(width = 200.dp, height = 300.dp),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(width = itemWidth, height = itemWidth),
                         )
-                        if (it.contains(VIDEO_REGEX))
+                        if (file.contains(VIDEO_REGEX))
                             Icon(
                                 imageVector = PlayCircle,
                                 "Play",

@@ -120,8 +120,10 @@ class MainViewModel : ViewModel() {
 
             link = urlPattern.find(msg)?.value
 
-            if (link == null)
+            if (link == null) {
+                setError(Exception(ExtractorError.INVALID_URL))
                 return@launch
+            }
 
             val isRedirected = """https?://pin.it/\S+""".toRegex().matches(link)
 

@@ -84,7 +84,7 @@ class MainViewModel : ViewModel() {
         onSuccess: (path: String) -> Unit = {}
     ) {
         if (source == PinSource.PIXIV && !isPremium.value) {
-            return setError(Exception("Premium Required"))
+            return setError(Exception(ExtractorError.PREMIUM_REQUIRED))
         }
         val headers =
             if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()

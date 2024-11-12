@@ -11,7 +11,7 @@ const val IS_PREMIUM = "is_premium"
 object AppPreference {
     private val kv: MMKV = MMKV.defaultMMKV()
 
-    private var _isPremium = MutableStateFlow(kv.getBoolean(IS_PREMIUM, false))
+    private var _isPremium = MutableStateFlow(kv.getBoolean(IS_PREMIUM, true))
     val isPremium = _isPremium.asStateFlow()
 
     fun setIsPremium(premium: Boolean) {

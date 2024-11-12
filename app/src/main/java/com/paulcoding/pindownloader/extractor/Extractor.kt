@@ -68,6 +68,7 @@ object ExtractorError {
     const val PIN_NOT_FOUND = "Pin not found."
     const val CANNOT_PARSE_ID = "Cannot parse Id."
     const val CANNOT_PARSE_JSON = "Cannot parse JSON."
+    const val PREMIUM_REQUIRED = "Premium Required."
 }
 
 @Serializable
@@ -82,7 +83,7 @@ data class PinData(
     val image: String? = null,
     val video: String? = null,
 ) {
-    val isPixiv =  source == PinSource.PIXIV
+    val isPixiv = source == PinSource.PIXIV
     val isPinterest = source == PinSource.PINTEREST
     val isVideo = video != null
     val isImage = image != null && video == null

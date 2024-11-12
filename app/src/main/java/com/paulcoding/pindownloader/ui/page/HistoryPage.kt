@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -37,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.helper.Config
+import com.paulcoding.pindownloader.helper.VIDEO_REGEX
 import com.paulcoding.pindownloader.helper.getFiles
 import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.helper.viewFile
+import com.paulcoding.pindownloader.ui.icon.PlayCircle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +72,7 @@ fun HistoryPage(goBack: () -> Unit) {
                 }, actions = {
                     if (files.isNotEmpty() && Config.showDeleteButton)
                         BadgedBox(badge = {
-                            Badge() {
+                            Badge {
                                 Text(files.size.toString())
                             }
                         }) {
@@ -102,16 +105,25 @@ fun HistoryPage(goBack: () -> Unit) {
                             makeToast(it.message ?: context.getString(R.string.failed_to_view_file))
                         }
                 })) {
-                    AsyncImage(
-                        model = it,
-                        contentDescription = null,
-                        modifier = Modifier.size(width = 200.dp, height = 300.dp),
-                    )
-//                if (it.contains(VIDEO_REGEX))
-//                    VideoPlayer(
-//                        videoUri = it,
-//                        modifier = Modifier.size(width = 200.dp, height = 300.dp),
-//                    )
+                    Box {
+                        AsyncImage(
+                            model = it,
+                            contentDescription = null,
+                            modifier = Modifier.size(width = 200.dp, height = 300.dp),
+                        )
+                        if (it.contains(VIDEO_REGEX))
+                            Icon(
+                                imageVector = PlayCircle,
+                                "Play",
+                                modifier = Modifier
+                                    .align(
+                                        Alignment.Center
+                                    )
+                                    .size(64.dp),
+                                tint = Color.White
+                            )
+                    }
+
                 }
             }
         }

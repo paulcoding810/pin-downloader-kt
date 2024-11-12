@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -34,9 +35,11 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -114,7 +117,14 @@ fun HomePage(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = {},
+                title = {
+                    Text(
+                        stringResource(R.string.app_name), style = TextStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 24.sp
+                        )
+                    )
+                },
                 modifier = Modifier.padding(8.dp),
                 actions = {
                     IconButton(onClick = viewHistory) {
@@ -134,8 +144,10 @@ fun HomePage(
         ) {
 
             Column(
-                modifier = modifier.padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = modifier
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 TextField(

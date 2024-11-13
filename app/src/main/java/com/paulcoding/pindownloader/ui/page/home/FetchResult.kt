@@ -71,7 +71,6 @@ fun FetchResult(
     }
 
     fun checkPermissionOrDownload(block: () -> Unit) {
-//        TODO: Check network
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q || storagePermission.status == PermissionStatus.Granted) {
             block()
         } else {

@@ -3,6 +3,8 @@ package com.paulcoding.pindownloader
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.net.ConnectivityManager
+import androidx.core.content.getSystemService
 import com.tencent.mmkv.MMKV
 
 class App : Application() {
@@ -10,10 +12,12 @@ class App : Application() {
         super.onCreate()
         MMKV.initialize(this)
         appContext = this
+        connectivityManager = getSystemService()!!
     }
 
     companion object {
         @SuppressLint("StaticFieldLeak")
         lateinit var appContext: Context
+        lateinit var connectivityManager: ConnectivityManager
     }
 }

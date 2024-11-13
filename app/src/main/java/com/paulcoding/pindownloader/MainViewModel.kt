@@ -11,6 +11,7 @@ import com.paulcoding.pindownloader.extractor.pinterest.PinterestExtractor
 import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.AppPreference
 import com.paulcoding.pindownloader.helper.Downloader
+import com.paulcoding.pindownloader.helper.NetworkUtil
 import com.paulcoding.pindownloader.helper.alsoLog
 import com.paulcoding.pindownloader.helper.resolveRedirectedUrl
 import kotlinx.coroutines.Dispatchers
@@ -95,12 +96,15 @@ class MainViewModel : ViewModel() {
             } else {
                 _uiStateFlow.update { it.copy(isDownloadingImage = true) }
             }
-            Downloader.download(appContext, link, fileName, headers)
-                .alsoLog("download path")
-                .onSuccess {
-                    onSuccess(it)
-                }
-                .onFailure { setError(it) }
+            checkInternetOrExec {
+                Downloader.download(appContext, link, fileName, headers)
+                    .alsoLog("download path")
+                    .onSuccess {
+                        onSuccess(it)
+                    }
+                    .onFailure { setError(it) }
+            }
+
             if (type == PinType.VIDEO) {
                 _uiStateFlow.update { it.copy(isDownloadingVideo = false) }
             } else {
@@ -113,38 +117,47 @@ class MainViewModel : ViewModel() {
         _uiStateFlow.update { it.copy(input = link) }
     }
 
+    private suspend fun checkInternetOrExec(block: suspend () -> Unit) {
+        if (NetworkUtil.isInternetAvailable()) {
+            return block()
+        }
+        return setError(Exception(ExtractorError.NO_INTERNET))
+    }
+
     fun extractLink(msg: String) {
         _uiStateFlow.update { UiState().copy(input = msg) }
         viewModelScope.launch(Dispatchers.IO) {
-            var link: String?
+            checkInternetOrExec {
+                var link: String?
 
-            val urlPattern = """(https?://\S+)""".toRegex()
+                val urlPattern = """(https?://\S+)""".toRegex()
 
-            link = urlPattern.find(msg)?.value
+                link = urlPattern.find(msg)?.value
 
-            if (link == null) {
-                setError(Exception(ExtractorError.INVALID_URL))
-                return@launch
-            }
-
-            val isRedirected = """https?://pin.it/\S+""".toRegex().matches(link)
-
-            if (isRedirected) {
-                try {
-                    _uiStateFlow.update { it.copy(isRedirectingUrl = true) }
-                    link = resolveRedirectedUrl(link).alsoLog("redirectedUrl")
-                } catch (e: Exception) {
-                    setError(e)
-                } finally {
-                    _uiStateFlow.update { it.copy(isRedirectingUrl = false) }
+                if (link == null) {
+                    setError(Exception(ExtractorError.INVALID_URL))
+                    return@checkInternetOrExec
                 }
-            }
 
-            if (link != null) {
-                setLink(link)
-                extract(link)
-            } else {
-                setError(Exception(ExtractorError.INVALID_URL))
+                val isRedirected = """https?://pin.it/\S+""".toRegex().matches(link)
+
+                if (isRedirected) {
+                    try {
+                        _uiStateFlow.update { it.copy(isRedirectingUrl = true) }
+                        link = resolveRedirectedUrl(link).alsoLog("redirectedUrl")
+                    } catch (e: Exception) {
+                        setError(e)
+                    } finally {
+                        _uiStateFlow.update { it.copy(isRedirectingUrl = false) }
+                    }
+                }
+
+                if (link != null) {
+                    setLink(link)
+                    extract(link)
+                } else {
+                    setError(Exception(ExtractorError.INVALID_URL))
+                }
             }
         }
     }

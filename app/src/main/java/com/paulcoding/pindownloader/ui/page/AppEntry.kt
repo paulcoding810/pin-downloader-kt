@@ -1,9 +1,11 @@
 package com.paulcoding.pindownloader.ui.page
 
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
@@ -56,29 +58,27 @@ fun NavGraphBuilder.animatedComposable(
         arguments = arguments,
         deepLinks = deepLinks,
         enterTransition = {
-            slideInVertically(
-                initialOffsetY = { 1000 },
-                animationSpec = tween(durationMillis = 500)
-            )
+            fadeInWithBlur()
         },
         exitTransition = {
-            slideOutVertically(
-                targetOffsetY = { -1000 },
-                animationSpec = tween(durationMillis = 500)
-            )
+            fadeOutWithBlur()
         },
         popEnterTransition = {
-            slideInVertically(
-                initialOffsetY = { -1000 },
-                animationSpec = tween(durationMillis = 500)
-            )
+            fadeInWithBlur()
         },
         popExitTransition = {
-            slideOutVertically(
-                targetOffsetY = { 1000 },
-                animationSpec = tween(durationMillis = 500)
-            )
+            fadeOutWithBlur()
         },
         content = content
     )
+}
+
+
+fun fadeInWithBlur(): EnterTransition {
+//    return fadeIn(animationSpec = tween(500)) + scaleIn(animationSpec = tween(500))
+    return fadeIn(animationSpec = tween(500))
+}
+
+fun fadeOutWithBlur(): ExitTransition {
+    return fadeOut(animationSpec = tween(500))
 }

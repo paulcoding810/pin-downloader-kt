@@ -13,7 +13,7 @@ class PixivExtractorTest :
             `when`("extracting image content") {
                 val link = "https://www.pixiv.net/en/artworks/80148063"
                 val expectedUrl =
-                    "https://i.pximg.net/img-original/img/2020/03/16/00/01/06/80148063_p000.png"
+                    "https://i.pximg.net/img-original/img/2020/03/16/00/01/06/80148063_p0.png"
                 then("should return original url") {
                     val result = extractor.extract(link)
 

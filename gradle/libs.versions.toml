@@ -26,6 +26,7 @@ documentfile = "1.0.1"
 mmkv = "2.0.0"
 navigationCompose = "2.8.3"
 billingKtx = "7.1.1"
+playServicesAds = "23.5.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -64,6 +65,7 @@ androidx-documentfile = { group = "androidx.documentfile", name = "documentfile"
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billingKtx" }
+play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

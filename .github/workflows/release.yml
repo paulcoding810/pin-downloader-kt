@@ -44,7 +44,7 @@ jobs:
 
       - name: Rename signed APK
         run: |
-          mv "${{ steps.sign.outputs.signedFile }}" "app-release.apk"
+          mv "${{ steps.sign_app.outputs.signedFile }}" "app-release.apk"
 
       - name: Create changelog
         id: changelog

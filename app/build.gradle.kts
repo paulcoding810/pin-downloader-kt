@@ -25,6 +25,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            resValue("string", "app_name", "Pin Downloader (Debug)")
         }
         release {
             isMinifyEnabled = true
@@ -86,6 +87,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.mmkv)
     implementation(libs.billing.ktx)
+    implementation(libs.play.services.ads)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

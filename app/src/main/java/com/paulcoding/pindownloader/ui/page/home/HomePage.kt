@@ -51,6 +51,7 @@ import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.helper.makeToast
+import com.paulcoding.pindownloader.ui.component.ColumnWithAd
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.icon.History
 import kotlinx.coroutines.delay
@@ -161,7 +162,7 @@ fun HomePage(
             )
         }
     ) { paddingValues ->
-        Column(
+        ColumnWithAd(
             modifier = modifier
                 .padding(paddingValues)
                 .fillMaxSize()
@@ -209,15 +210,14 @@ fun HomePage(
                         Text(LocalContext.current.getString(R.string.fetch))
                     }
                 }
-            }
-
-            uiState.pinData?.let {
-                FetchResult(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .padding(top = 8.dp), viewModel,
-                    showSnackbar = showSnackbar
-                )
+                uiState.pinData?.let {
+                    FetchResult(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 8.dp), viewModel,
+                        showSnackbar = showSnackbar
+                    )
+                }
             }
         }
     }

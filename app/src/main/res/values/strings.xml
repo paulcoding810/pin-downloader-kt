@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pin Dowloader</string>
+    <string name="app_name">Pin Downloader</string>
     <string name="invalid_url">Invalid url</string>
     <string name="failed_to_fetch_images">Failed to fetch images</string>
     <string name="clear">Clear</string>
@@ -14,4 +14,5 @@
     <string name="delete_images">Delete Images</string>
     <string name="downloaded_successfully">Downloaded successfully!</string>
     <string name="view">View</string>
+    <string name="ad_unit_id">ca-app-pub-8453825871663090/3171491266</string>
 </resources>

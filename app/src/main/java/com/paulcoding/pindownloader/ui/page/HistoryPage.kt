@@ -44,6 +44,7 @@ import com.paulcoding.pindownloader.helper.VIDEO_REGEX
 import com.paulcoding.pindownloader.helper.getFiles
 import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.helper.viewFile
+import com.paulcoding.pindownloader.ui.component.ColumnWithAd
 import com.paulcoding.pindownloader.ui.icon.PlayCircle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,47 +95,48 @@ fun HistoryPage(goBack: () -> Unit) {
                 })
         }
     ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(horizontal = 8.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(files.size) { index ->
-                val file = files[index]
-                Box(modifier = Modifier.clickable(onClick = {
-                    viewFile(context, file)
-                        .onFailure {
-                            it.printStackTrace()
-                            makeToast(it.message ?: context.getString(R.string.failed_to_view_file))
-                        }
-                })) {
-                    Box {
-                        AsyncImage(
-                            model = file,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(width = itemWidth, height = itemWidth),
-                        )
-                        if (file.contains(VIDEO_REGEX))
-                            Icon(
-                                imageVector = PlayCircle,
-                                "Play",
-                                modifier = Modifier
-                                    .align(
-                                        Alignment.Center
-                                    )
-                                    .size(64.dp),
-                                tint = Color.White
+        ColumnWithAd(modifier = Modifier.padding(paddingValues)) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(files.size) { index ->
+                    val file = files[index]
+                    Box(modifier = Modifier.clickable(onClick = {
+                        viewFile(context, file)
+                            .onFailure {
+                                it.printStackTrace()
+                                makeToast(
+                                    it.message ?: context.getString(R.string.failed_to_view_file)
+                                )
+                            }
+                    })) {
+                        Box {
+                            AsyncImage(
+                                model = file,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(width = itemWidth, height = itemWidth),
                             )
+                            if (file.contains(VIDEO_REGEX))
+                                Icon(
+                                    imageVector = PlayCircle,
+                                    "Play",
+                                    modifier = Modifier
+                                        .align(
+                                            Alignment.Center
+                                        )
+                                        .size(64.dp),
+                                    tint = Color.White
+                                )
+                        }
                     }
-
                 }
             }
         }
     }
-
 }

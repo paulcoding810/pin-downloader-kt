@@ -23,3 +23,21 @@
 -obfuscationdictionary dict.txt
 -classobfuscationdictionary dict.txt
 -packageobfuscationdictionary dict.txt
+
+# Google Mobile Ads SDK (AdMob)
+-keep public class com.google.android.gms.ads.** {
+    public *;
+}
+
+-keepclassmembers class * extends com.google.android.gms.ads.AdListener {
+    public void *(...);
+}
+
+# Keep track of Parcelable implementations (needed by Google Play Services)
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final android.os.Parcelable$Creator *;
+}
+
+# Needed for R8
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**

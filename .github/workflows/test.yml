@@ -1,0 +1,37 @@
+name: Test Extractor
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run tests
+        run: ./gradlew test
+        continue-on-error: true
+
+      - name: Upload test reports
+        if: ${{ failure() || steps.test.outcome == 'failure' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/androidTests/
+            **/build/test-results/
+          retention-days: 7
+
+      - name: Check test results
+        if: ${{ steps.test.outcome == 'failure' }}
+        run: exit 1

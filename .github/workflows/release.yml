@@ -1,12 +1,10 @@
-name: Android CI
+name: Build & Release
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - 'v*.*'
 
 jobs:
   build:
@@ -30,32 +28,35 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-
-
       - name: Build app
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Sign APK
         id: sign_app
         uses: ilharp/sign-android-release@nightly
         with:
-          releaseDir: app/build/outputs/apk/debug
+          releaseDir: app/build/outputs/apk/release
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           buildToolsVersion: ${{ env.ANDROID_BUILD_TOOLS_VERSION }}
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Rename signed APK
+        run: |
+          mv "${{ steps.sign.outputs.signedFile }}" "app-release.apk"
+
+      - name: Create changelog
+        id: changelog
+        uses: requarks/changelog-action@v1
         with:
-          name: app
-          path: app/build/outputs/apk/debug/*signed.apk
+          token: ${{ github.token }}
+          tag: ${{ github.ref_name }}
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.changelog.outputs.changes }}
+          files: "app-release.apk"
+          fail_on_unmatched_files: true
+          make_latest: true

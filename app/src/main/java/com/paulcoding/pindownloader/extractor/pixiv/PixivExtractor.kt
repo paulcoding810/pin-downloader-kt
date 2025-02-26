@@ -21,11 +21,21 @@ class PixivExtractor : Extractor() {
     override val idRegex: String
         get() = """https?://(?:www\.)?pixiv\.net/(?:en/)?(?:artworks|i)/(\d+)"""
 
-    override fun extractResponse(
+    private fun extractId(link: String): String {
+        val regex = Regex(idRegex)
+        val matchResult = regex.find(link)
+        if (matchResult != null) {
+            return matchResult.groupValues[1]
+        }
+
+        throw (Exception(ExtractorError.CANNOT_PARSE_ID))
+    }
+
+    private fun extractResponse(
         response: JsonElement,
         link: String,
-        id: String,
     ): PinData {
+        val id = extractId(link)
         val images = traverseObject<Map<String, String>>(response, listOf("illust", "{}", "urls"))
 
         return PinData(
@@ -65,6 +75,11 @@ class PixivExtractor : Extractor() {
         }
 
         throw Exception(ExtractorError.CANNOT_PARSE_JSON, Exception(apiUrl))
+    }
+
+    override suspend fun extract(link: String): Result<PinData> = runCatching {
+        val response = callApi(link)
+        extractResponse(response, link)
     }
 
     override fun buildApi(

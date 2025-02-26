@@ -22,11 +22,15 @@ class PinterestExtractor() : Extractor() {
     override val idRegex: String
         get() = """https?://(?:www\.)?pinterest\.[a-z]+/(?:pin|board)/(\d+)/?"""
 
+    override fun isMatches(link: String): Boolean {
+        val pinterestRegex =
+            Regex("""https?://(www\.)?(pinterest\.(com|co\.[a-z]{2})|pin\.it)/[a-zA-Z0-9_/-]+""")
+        return pinterestRegex.containsMatchIn(link)
+    }
 
-    override fun extractResponse(
+    private fun extractResponse(
         response: JsonElement,
         link: String,
-        id: String,
     ): PinData {
         // response.data.v3GetPinQuery.data.videos.videoList.v720P.url
         // response.data.v3GetPinQuery.data.storyPinData.pages[0].blocks[0].videoData.videoList720P.v720P.url
@@ -39,6 +43,8 @@ class PinterestExtractor() : Extractor() {
         // response.data.v3GetPinQuery.data.title
         // response.data.v3GetPinQuery.data.gridTitle
 
+        // response.data.v3GetPinQuery.data.entityId
+
         traverseObject<JsonElement>(
             response,
             listOf(
@@ -48,6 +54,8 @@ class PinterestExtractor() : Extractor() {
                 "data"
             )
         )?.let { data ->
+            val id = traverseObject<String>(data, "entityId".split('.'))
+                ?: throw (Exception(ExtractorError.PIN_NOT_FOUND))
             val imageUrl = traverseObject<String>(data, "imageSpec_orig.url".split('.'))
             val thumbnail = traverseObject<String>(data, "imageSpec_236x.url".split('.'))
             val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
@@ -65,7 +73,7 @@ class PinterestExtractor() : Extractor() {
             )
 
             if (videoUrl == null && imageUrl == null) {
-                throw Exception("No images or videos")
+                throw Exception(ExtractorError.PIN_NOT_FOUND)
             }
 
             val pinData =
@@ -117,5 +125,10 @@ class PinterestExtractor() : Extractor() {
             throw Exception("Empty data relay response while parsing $apiUrl")
         }
         return CustomJson.parseToJsonElement(initialData)
+    }
+
+    override suspend fun extract(link: String): Result<PinData> = runCatching {
+        val response = callApi(link)
+        extractResponse(response, link)
     }
 }

@@ -11,23 +11,8 @@ abstract class Extractor {
     abstract val source: PinSource
     abstract val idRegex: String
 
-    protected abstract fun extractResponse(
-        response: JsonElement,
-        link: String,
-        id: String,
-    ): PinData
 
-    protected open fun extractId(link: String): String {
-        val regex = Regex(idRegex)
-        val matchResult = regex.find(link)
-        if (matchResult != null) {
-            return matchResult.groupValues[1]
-        }
-
-        throw (Exception(ExtractorError.CANNOT_PARSE_ID))
-    }
-
-    fun isMatches(link: String): Boolean {
+    open fun isMatches(link: String): Boolean {
         val regex = Regex(idRegex)
         return regex.containsMatchIn(link)
     }
@@ -51,15 +36,8 @@ abstract class Extractor {
         return response
     }
 
-    suspend fun extract(link: String): Result<PinData> {
-        return runCatching {
-            val id = extractId(link)
-            val apiUrl = buildApi(link, id)
-            val response = callApi(apiUrl)
 
-            return@runCatching extractResponse(response, link, id)
-        }
-    }
+    abstract suspend fun extract(link: String): Result<PinData>
 }
 
 object ExtractorError {

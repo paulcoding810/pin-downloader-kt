@@ -1,94 +1,121 @@
 package com.paulcoding.pindownloader.extractor.pinterest
 
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.parseInputStream
 import com.paulcoding.pindownloader.extractor.Extractor
 import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
-import com.paulcoding.pindownloader.extractor.PinImage
 import com.paulcoding.pindownloader.extractor.PinSource
+import com.paulcoding.pindownloader.helper.CustomJson
+import com.paulcoding.pindownloader.helper.KtorClient
 import com.paulcoding.pindownloader.helper.traverseObject
+import io.ktor.client.request.get
+import io.ktor.client.statement.readRawBytes
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.JsonElement
+import java.net.URI
 
-class PinterestExtractor : Extractor() {
+class PinterestExtractor() : Extractor() {
     override val source: PinSource
         get() = PinSource.PINTEREST
 
     override val idRegex: String
         get() = """https?://(?:www\.)?pinterest\.[a-z]+/(?:pin|board)/(\d+)/?"""
 
-    override fun buildApi(
-        link: String,
-        id: String,
-    ): String =
-        """https://www.pinterest.com/resource/PinResource/get/?data={"options":{"id":"$id","field_set_key":"unauth_react_main_pin"}}"""
 
     override fun extractResponse(
         response: JsonElement,
         link: String,
         id: String,
     ): PinData {
-        traverseObject<JsonElement>(response, listOf("resource_response", "data"))?.let { data ->
-            val images = traverseObject<Map<String, PinImage>>(data, listOf("images"))
-            val videos =
-                traverseObject<Map<String, PinImage>>(
-                    data,
-                    listOf("videos", "video_list"),
-                )
+        // response.data.v3GetPinQuery.data.videos.videoList.v720P.url
+        // response.data.v3GetPinQuery.data.storyPinData.pages[0].blocks[0].videoData.videoList720P.v720P.url
+        // response.data.v3GetPinQuery.data.videos.videoList.v720P.thumbnail
 
-            val storyVideos =
-                traverseObject<Map<String, PinImage>>(
-                    data,
-                    listOf(
-                        "story_pin_data",
-                        "pages",
-                        "[]",
-                        "blocks",
-                        "[]",
-                        "video",
-                        "video_list",
-                    ),
-                )
+        // response.data.v3GetPinQuery.data.imageSpec_236x.url
+        // response.data.v3GetPinQuery.data.imageSpec_orig.url
 
-            if (videos == null && images == null) {
-                throw Exception(ExtractorError.CANNOT_PARSE_JSON)
+        // response.data.v3GetPinQuery.data.closeupAttribution.fullName
+        // response.data.v3GetPinQuery.data.title
+        // response.data.v3GetPinQuery.data.gridTitle
+
+        traverseObject<JsonElement>(
+            response,
+            listOf(
+                "response",
+                "data",
+                "v3GetPinQuery",
+                "data"
+            )
+        )?.let { data ->
+            val imageUrl = traverseObject<String>(data, "imageSpec_orig.url".split('.'))
+            val thumbnail = traverseObject<String>(data, "imageSpec_236x.url".split('.'))
+            val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
+                data,
+                listOf("gridTitle")
+            )
+            val author = traverseObject<String>(data, "closeupAttribution.fullName".split('.'))
+                ?: traverseObject<String>(data, "originPinner.fullName".split('.'))
+            val videoUrl = traverseObject<String>(
+                data,
+                "videos.videoList.v720P.url".split('.'),
+            ) ?: traverseObject<String>(
+                data,
+                "storyPinData.pages.[].blocks.[].videoData.videoList720P.v720P.url".split('.'),
+            )
+
+            if (videoUrl == null && imageUrl == null) {
+                throw Exception("No images or videos")
             }
 
-            var pinData =
+            val pinData =
                 PinData(
-                    thumbnail = images?.get("564x")?.url,
-                    author = "",
-                    description = traverseObject<String>(data, listOf("seo_description")),
-                    date = traverseObject<String>(data, listOf("closeup_attribution", "full_name")),
+                    thumbnail = thumbnail ?: imageUrl,
+                    author = author,
+                    description = title,
+                    date = null,
                     source = PinSource.PINTEREST,
                     id = id,
                     link = link,
+                    video = videoUrl,
+                    image = imageUrl
                 )
-
-            pinData = pinData.copy(
-                video = getVideoUrl(videos) ?: getVideoUrl(storyVideos),
-            )
-
-            if (images != null) {
-                val origin = images["orig"]?.url ?: images.values.lastOrNull()?.url
-                val thumb =
-                    if (origin != null && origin.endsWith("gif")) origin else pinData.thumbnail
-                pinData =
-                    pinData.copy(
-                        image = origin,
-                        thumbnail = thumb
-                    )
-            }
             return pinData
         }
+
         throw Exception(ExtractorError.CANNOT_PARSE_JSON)
     }
 
-    private fun getVideoUrl(videos: Map<String, PinImage>?): String? {
-        if (videos == null) return null
-        val url = videos["V_720P"]?.url
-            ?: videos["V_EXP7"]?.url
-            ?: videos.values
-                .map { it.url }
-                .find { it.contains("mp4") }
-        return url
+    override suspend fun callApi(apiUrl: String): JsonElement {
+
+        val uri = URI(apiUrl)
+        val baseUri = "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}"
+
+        val response =
+            KtorClient.client.use { client ->
+                client.get(apiUrl)
+                    .apply {
+                        if (status != HttpStatusCode.OK) {
+                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                        }
+                    }
+            }
+
+        val doc =
+            Ksoup.parseInputStream(
+                response.readRawBytes().inputStream(),
+                baseUri = baseUri,
+                charsetName = "UTF-8",
+            )
+
+
+        val initialData =
+            doc.select("script[data-relay-response=true][type=application/json]").last()
+                ?.html() // use html() for get script's inner text
+
+        if (initialData.isNullOrEmpty()) {
+            throw Exception("Empty data relay response while parsing $apiUrl")
+        }
+        return CustomJson.parseToJsonElement(initialData)
     }
 }

@@ -32,10 +32,10 @@ abstract class Extractor {
         return regex.containsMatchIn(link)
     }
 
-    abstract fun buildApi(
+    open fun buildApi(
         link: String,
         id: String,
-    ): String
+    ): String = link
 
     protected open suspend fun callApi(apiUrl: String): JsonElement {
         val response =

@@ -13,7 +13,6 @@ import com.paulcoding.pindownloader.helper.AppPreference
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.NetworkUtil
 import com.paulcoding.pindownloader.helper.alsoLog
-import com.paulcoding.pindownloader.helper.resolveRedirectedUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -128,36 +127,15 @@ class MainViewModel : ViewModel() {
         _uiStateFlow.update { UiState().copy(input = msg) }
         viewModelScope.launch(Dispatchers.IO) {
             checkInternetOrExec {
-                var link: String?
-
                 val urlPattern = """(https?://\S+)""".toRegex()
-
-                link = urlPattern.find(msg)?.value
+                val link = urlPattern.find(msg)?.value
 
                 if (link == null) {
                     setError(Exception(ExtractorError.INVALID_URL))
                     return@checkInternetOrExec
                 }
-
-                val isRedirected = """https?://pin.it/\S+""".toRegex().matches(link)
-
-                if (isRedirected) {
-                    try {
-                        _uiStateFlow.update { it.copy(isRedirectingUrl = true) }
-                        link = resolveRedirectedUrl(link).alsoLog("redirectedUrl")
-                    } catch (e: Exception) {
-                        setError(e)
-                    } finally {
-                        _uiStateFlow.update { it.copy(isRedirectingUrl = false) }
-                    }
-                }
-
-                if (link != null) {
-                    setLink(link)
-                    extract(link)
-                } else {
-                    setError(Exception(ExtractorError.INVALID_URL))
-                }
+                setLink(link)
+                extract(link)
             }
         }
     }

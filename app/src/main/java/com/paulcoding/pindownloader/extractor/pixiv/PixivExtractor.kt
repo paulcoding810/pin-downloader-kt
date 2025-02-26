@@ -8,7 +8,6 @@ import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.CustomJson
 import com.paulcoding.pindownloader.helper.KtorClient
-import com.paulcoding.pindownloader.helper.alsoLog
 import com.paulcoding.pindownloader.helper.traverseObject
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -68,7 +67,7 @@ class PixivExtractor : Extractor() {
             preloadDataEle
                 ?.attr("content")
                 ?.let {
-                    CustomJson.parseToJsonElement(it).alsoLog("pixiv preloadData")
+                    CustomJson.parseToJsonElement(it)
                 }
         if (preloadData != null) {
             return preloadData

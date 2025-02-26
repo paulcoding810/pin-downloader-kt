@@ -28,11 +28,11 @@ import coil3.size.Scale
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
+import com.paulcoding.androidtools.makeToast
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.extractor.PinType
-import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.helper.viewFile
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.component.VideoPlayer

@@ -2,6 +2,7 @@ package com.paulcoding.pindownloader
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paulcoding.androidtools.alsoLog
 import com.paulcoding.pindownloader.App.Companion.appContext
 import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
@@ -12,7 +13,6 @@ import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.AppPreference
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.NetworkUtil
-import com.paulcoding.pindownloader.helper.alsoLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

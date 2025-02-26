@@ -47,10 +47,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.paulcoding.androidtools.makeToast
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
 import com.paulcoding.pindownloader.extractor.ExtractorError
-import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.ui.component.ColumnWithAd
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.icon.History

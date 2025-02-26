@@ -62,6 +62,7 @@ class MainViewModel : ViewModel() {
                 _uiStateFlow.update { it.copy(pinData = data) }
 
             }.onFailure { throwable ->
+                throwable.printStackTrace()
                 setError(throwable)
             }
 
@@ -101,7 +102,10 @@ class MainViewModel : ViewModel() {
                     .onSuccess {
                         onSuccess(it)
                     }
-                    .onFailure { setError(it) }
+                    .onFailure {
+                        it.printStackTrace()
+                        setError(it)
+                    }
             }
 
             if (type == PinType.VIDEO) {

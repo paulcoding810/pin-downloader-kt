@@ -1,5 +1,3 @@
-import com.android.build.gradle.internal.api.BaseVariantOutputImpl
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,24 +18,30 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "com.paulcoding.pindownloader.KotestAndroidRunner"
+
+        splits {
+            abi {
+                isEnable = true
+                reset()
+                include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+                isUniversalApk = true
+            }
+        }
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
+            applicationIdSuffix = ".dev"
             resValue("string", "app_name", "Pin Downloader (Debug)")
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-        }
-    }
-    applicationVariants.all {
-        outputs.forEach { output ->
-            (output as BaseVariantOutputImpl).outputFileName = "PinDownloader.apk"
         }
     }
     dependenciesInfo {

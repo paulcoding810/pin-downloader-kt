@@ -3,7 +3,6 @@ package com.paulcoding.pindownloader
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.paulcoding.pindownloader.App.Companion.appContext
-import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.extractor.PinType
@@ -12,7 +11,6 @@ import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.AppPreference
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.NetworkUtil
-import com.paulcoding.pindownloader.helper.alsoLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +28,7 @@ class MainViewModel : ViewModel() {
 
     data class UiState(
         val input: String = "",
-        val exception: Throwable? = null,
+        val exception: AppException? = null,
         val pinData: PinData? = null,
         val isFetchingImages: Boolean = false,
         val isRedirectingUrl: Boolean = false,
@@ -49,27 +47,29 @@ class MainViewModel : ViewModel() {
             }
 
         if (extractor == null) {
-            setError(Exception(ExtractorError.INVALID_URL))
+            setError(AppException.InvalidUrlError(link))
             return
         }
 
         _uiStateFlow.update { it.copy(isFetchingImages = true) }
 
-        extractor
-            .extract(link)
-            .alsoLog("pin extraction")
-            .onSuccess { data ->
+        try {
+            extractor.extract(link).let { data ->
                 _uiStateFlow.update { it.copy(pinData = data) }
-
-            }.onFailure { throwable ->
-                setError(throwable)
             }
+        } catch (e: AppException) {
+            e.printStackTrace()
+            setError(e)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            setError(AppException.UnknownError())
+        }
 
         _uiStateFlow.update { it.copy(isFetchingImages = false) }
     }
 
-    private fun setError(throwable: Throwable) {
-        _uiStateFlow.update { it.copy(exception = throwable) }
+    private fun setError(appException: AppException) {
+        _uiStateFlow.update { it.copy(exception = appException) }
     }
 
     fun clearPinData() {
@@ -84,7 +84,7 @@ class MainViewModel : ViewModel() {
         onSuccess: (path: String) -> Unit = {}
     ) {
         if (source == PinSource.PIXIV && !isPremium.value) {
-            return setError(Exception(ExtractorError.PREMIUM_REQUIRED))
+            return setError(AppException.PremiumRequired())
         }
         val headers =
             if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()
@@ -96,12 +96,13 @@ class MainViewModel : ViewModel() {
                 _uiStateFlow.update { it.copy(isDownloadingImage = true) }
             }
             checkInternetOrExec {
-                Downloader.download(appContext, link, fileName, headers)
-                    .alsoLog("download path")
-                    .onSuccess {
-                        onSuccess(it)
-                    }
-                    .onFailure { setError(it) }
+                try {
+                    val downloadPath = Downloader.download(appContext, link, fileName, headers)
+                    onSuccess(downloadPath)
+                } catch (e: AppException) {
+                    e.printStackTrace()
+                    setError(e)
+                }
             }
 
             if (type == PinType.VIDEO) {
@@ -120,7 +121,7 @@ class MainViewModel : ViewModel() {
         if (NetworkUtil.isInternetAvailable()) {
             return block()
         }
-        return setError(Exception(ExtractorError.NO_INTERNET))
+        return setError(AppException.NetworkError())
     }
 
     fun extractLink(msg: String) {
@@ -131,7 +132,7 @@ class MainViewModel : ViewModel() {
                 val link = urlPattern.find(msg)?.value
 
                 if (link == null) {
-                    setError(Exception(ExtractorError.INVALID_URL))
+                    setError(AppException.MessageError())
                     return@checkInternetOrExec
                 }
                 setLink(link)

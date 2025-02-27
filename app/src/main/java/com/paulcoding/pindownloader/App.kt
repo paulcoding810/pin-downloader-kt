@@ -6,12 +6,14 @@ import android.content.Context
 import android.net.ConnectivityManager
 import androidx.core.content.getSystemService
 import com.google.android.gms.ads.MobileAds
+import com.paulcoding.androidtools.AndroidTools
 import com.tencent.mmkv.MMKV
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
         MMKV.initialize(this)
+        AndroidTools.initialize(this)
         appContext = this
         connectivityManager = getSystemService()!!
         MobileAds.initialize(this)

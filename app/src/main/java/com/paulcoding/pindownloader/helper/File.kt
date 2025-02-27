@@ -32,7 +32,6 @@ fun getFiles(context: Context): Result<List<String>> = runCatching {
         .filter { it.isFile }
         .map { file -> file.absolutePath }
         .toList()
-        .alsoLog("getFiles")
 }
 
 fun createFileIntent(context: Context, path: String): Intent? {

@@ -47,10 +47,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.paulcoding.androidtools.makeToast
+import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
-import com.paulcoding.pindownloader.extractor.ExtractorError
-import com.paulcoding.pindownloader.helper.makeToast
 import com.paulcoding.pindownloader.ui.component.ColumnWithAd
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.icon.History
@@ -106,10 +106,15 @@ fun HomePage(
 
     LaunchedEffect(uiState.exception) {
         uiState.exception?.let {
-
-            when (it.message) {
-                ExtractorError.PIN_NOT_FOUND -> makeToast(R.string.pin_not_found)
-                ExtractorError.CANNOT_PARSE_JSON -> makeToast(R.string.failed_to_fetch_images)
+            when (it) {
+                is AppException.PinNotFoundError -> makeToast(R.string.pin_not_found)
+                is AppException.InvalidUrlError -> makeToast(R.string.invalid_url)
+                is AppException.NetworkError -> makeToast(R.string.network_error)
+                is AppException.DownloadError -> makeToast(R.string.failed_to_download)
+                is AppException.PremiumRequired -> navToPremium()
+                is AppException.ParseJsonError -> makeToast(R.string.failed_to_fetch_images)
+                is AppException.ParseIdError -> makeToast(R.string.failed_to_fetch_images)
+                is AppException.UnknownError -> makeToast(R.string.something_went_wrong)
                 else -> makeToast(it.message ?: it.toString())
             }
         }

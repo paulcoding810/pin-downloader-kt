@@ -76,12 +76,4 @@ enum class PinSource {
 enum class PinType {
     IMAGE,
     VIDEO,
-    GIF
 }
-
-@Serializable
-data class PinImage(
-    val height: Int,
-    val width: Int,
-    val url: String,
-)

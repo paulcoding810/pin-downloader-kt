@@ -1,3 +1,7 @@
+![Test](https://github.com/paulcoding810/pin-downloader-kt/actions/workflows/test.yml/badge.svg?branch=main)
+![Build](https://github.com/paulcoding810/pin-downloader-kt/actions/workflows/dev.yml/badge.svg?branch=main)
+![GitHub release](https://img.shields.io/github/v/release/paulcoding810/pin-downloader-kt?include_prereleases)
+
 # PinDownloader
 
 PinDownloader is an Android application that allows users to download images and videos from Pinterest and Pixiv.

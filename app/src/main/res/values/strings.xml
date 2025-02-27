@@ -15,4 +15,7 @@
     <string name="downloaded_successfully">Downloaded successfully!</string>
     <string name="view">View</string>
     <string name="ad_unit_id">ca-app-pub-8453825871663090/3171491266</string>
+    <string name="network_error">Network Error</string>
+    <string name="failed_to_download">Failed to download image</string>
+    <string name="something_went_wrong">Something went wrong</string>
 </resources>

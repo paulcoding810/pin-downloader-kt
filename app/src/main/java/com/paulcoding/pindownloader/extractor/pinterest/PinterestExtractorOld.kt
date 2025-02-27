@@ -1,6 +1,6 @@
 package com.paulcoding.pindownloader.extractor.pinterest
 
-import com.paulcoding.pindownloader.extractor.ExtractorError
+import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.KtorClient
@@ -18,7 +18,7 @@ class PinterestExtractorOld {
                     .apply {
                         if (status != HttpStatusCode.OK) {
                             println("status==$status")
-                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                            throw AppException.PinNotFoundError(url)
                         }
                     }.body<PinterestResponse>()
 
@@ -31,11 +31,11 @@ class PinterestExtractorOld {
             var pinData =
                 PinData(
                     thumbnail =
-                        images
-                            ?.values
-                            ?.toList()
-                            ?.get(0)
-                            ?.url,
+                    images
+                        ?.values
+                        ?.toList()
+                        ?.get(0)
+                        ?.url,
                     author = "",
                     description = richMetadata?.title ?: richMetadata?.article?.description,
                     date = "",
@@ -45,24 +45,24 @@ class PinterestExtractorOld {
                 )
 
             if (videos == null && images == null) {
-                throw Exception(ExtractorError.CANNOT_PARSE_JSON)
+                throw AppException.ParseJsonError(id)
             }
 
             if (videos != null) {
                 pinData =
                     pinData.copy(
                         video =
-                            videos.values
-                                .map { it.url }
-                                .find { it.contains("mp4") },
+                        videos.values
+                            .map { it.url }
+                            .find { it.contains("mp4") },
                     )
             }
             if (images != null) {
                 pinData =
                     pinData.copy(
                         image =
-                            images["orig"]?.url
-                                ?: images.values.lastOrNull()?.url,
+                        images["orig"]?.url
+                            ?: images.values.lastOrNull()?.url,
                     )
             }
 

@@ -2,8 +2,8 @@ package com.paulcoding.pindownloader.extractor.pinterest
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.parseInputStream
+import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.extractor.Extractor
-import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.CustomJson
@@ -55,7 +55,7 @@ class PinterestExtractor() : Extractor() {
             )
         )?.let { data ->
             val id = traverseObject<String>(data, "entityId".split('.'))
-                ?: throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                ?: throw (AppException.PinNotFoundError(link))
             val imageUrl = traverseObject<String>(data, "imageSpec_orig.url".split('.'))
             val thumbnail = traverseObject<String>(data, "imageSpec_236x.url".split('.'))
             val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
@@ -73,7 +73,7 @@ class PinterestExtractor() : Extractor() {
             )
 
             if (videoUrl == null && imageUrl == null) {
-                throw Exception(ExtractorError.PIN_NOT_FOUND)
+                throw AppException.PinNotFoundError(link)
             }
 
             val pinData =
@@ -91,7 +91,7 @@ class PinterestExtractor() : Extractor() {
             return pinData
         }
 
-        throw Exception(ExtractorError.CANNOT_PARSE_JSON)
+        throw AppException.ParseJsonError(link)
     }
 
     override suspend fun callApi(apiUrl: String): JsonElement {
@@ -104,7 +104,7 @@ class PinterestExtractor() : Extractor() {
                 client.get(apiUrl)
                     .apply {
                         if (status != HttpStatusCode.OK) {
-                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                            throw AppException.PinNotFoundError(apiUrl)
                         }
                     }
             }
@@ -122,13 +122,13 @@ class PinterestExtractor() : Extractor() {
                 ?.html() // use html() for get script's inner text
 
         if (initialData.isNullOrEmpty()) {
-            throw Exception("Empty data relay response while parsing $apiUrl")
+            throw AppException.ParseJsonError(apiUrl)
         }
         return CustomJson.parseToJsonElement(initialData)
     }
 
-    override suspend fun extract(link: String): Result<PinData> = runCatching {
+    override suspend fun extract(link: String): PinData {
         val response = callApi(link)
-        extractResponse(response, link)
+        return extractResponse(response, link)
     }
 }

@@ -1,5 +1,6 @@
 package com.paulcoding.pindownloader.extractor
 
+import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.helper.KtorClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -28,7 +29,7 @@ abstract class Extractor {
                 client.get(apiUrl)
                     .apply {
                         if (status != HttpStatusCode.OK) {
-                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                            throw (AppException.PinNotFoundError(apiUrl))
                         }
                     }.body<JsonElement>()
             }
@@ -37,17 +38,7 @@ abstract class Extractor {
     }
 
 
-    abstract suspend fun extract(link: String): Result<PinData>
-}
-
-object ExtractorError {
-    const val NO_INTERNET = "No Internet."
-    const val FAILED_TO_DOWNLOAD = "Failed to download image."
-    const val INVALID_URL = "Invalid URL."
-    const val PIN_NOT_FOUND = "Pin not found."
-    const val CANNOT_PARSE_ID = "Cannot parse Id."
-    const val CANNOT_PARSE_JSON = "Cannot parse JSON."
-    const val PREMIUM_REQUIRED = "Premium Required."
+    abstract suspend fun extract(link: String): PinData
 }
 
 @Serializable

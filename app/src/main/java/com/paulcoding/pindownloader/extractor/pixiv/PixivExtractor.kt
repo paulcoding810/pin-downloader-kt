@@ -2,8 +2,8 @@ package com.paulcoding.pindownloader.extractor.pixiv
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
+import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.extractor.Extractor
-import com.paulcoding.pindownloader.extractor.ExtractorError
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.CustomJson
@@ -27,7 +27,7 @@ class PixivExtractor : Extractor() {
             return matchResult.groupValues[1]
         }
 
-        throw (Exception(ExtractorError.CANNOT_PARSE_ID))
+        throw AppException.ParseIdError(link)
     }
 
     private fun extractResponse(
@@ -56,7 +56,7 @@ class PixivExtractor : Extractor() {
                 client.get(apiUrl)
                     .apply {
                         if (status != HttpStatusCode.OK) {
-                            throw (Exception(ExtractorError.PIN_NOT_FOUND))
+                            throw AppException.PinNotFoundError(apiUrl)
                         }
                     }.body<String>()
             }
@@ -73,12 +73,12 @@ class PixivExtractor : Extractor() {
             return preloadData
         }
 
-        throw Exception(ExtractorError.CANNOT_PARSE_JSON, Exception(apiUrl))
+        throw AppException.ParseJsonError(apiUrl)
     }
 
-    override suspend fun extract(link: String): Result<PinData> = runCatching {
+    override suspend fun extract(link: String): PinData {
         val response = callApi(link)
-        extractResponse(response, link)
+        return extractResponse(response, link)
     }
 
     override fun buildApi(

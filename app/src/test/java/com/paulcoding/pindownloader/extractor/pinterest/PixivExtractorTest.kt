@@ -15,13 +15,9 @@ class PixivExtractorTest :
                 val expectedUrl =
                     "https://i.pximg.net/img-original/img/2020/03/16/00/01/06/80148063_p0.png"
                 then("should return original url") {
-                    val result = extractor.extract(link)
-
-                    result.isSuccess shouldBe true
-
-                    result.getOrNull()?.let {
-                        it.source shouldBe PinSource.PIXIV
-                        it.image shouldBe expectedUrl
+                    extractor.extract(link).run {
+                        source shouldBe PinSource.PIXIV
+                        image shouldBe expectedUrl
                     }
                 }
             }

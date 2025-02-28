@@ -1,7 +1,8 @@
 package com.paulcoding.pindownloader.extractor.pinterest
 
-import com.paulcoding.pindownloader.extractor.ExtractorError
+import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.extractor.PinSource
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 
@@ -17,15 +18,11 @@ class PinterestExtractorTest : BehaviorSpec({
                 "https://i.pinimg.com/originals/17/8e/bf/178ebf8c048a58243707fed29787298e.jpg"
 
             then("should return successful result with video data") {
-                val result = extractor.extract(pinUrl)
+                val pinData = extractor.extract(pinUrl)
 
-                result.isSuccess shouldBe true
-
-                result.getOrNull()?.let { pinData ->
-                    pinData.source shouldBe PinSource.PINTEREST
-                    pinData.video shouldBe expectedVideoUrl
-                    pinData.image shouldBe expectedImageUrl
-                }
+                pinData.source shouldBe PinSource.PINTEREST
+                pinData.video shouldBe expectedVideoUrl
+                pinData.image shouldBe expectedImageUrl
             }
         }
 
@@ -33,15 +30,13 @@ class PinterestExtractorTest : BehaviorSpec({
             val pinUrl = "https://www.pinterest.com/pin/249598004342746159/"
             val expectedImageUrl =
                 "https://i.pinimg.com/originals/4b/7f/97/4b7f9782977aea6e8a59dc9d6dae0317.gif"
-            val expectedThumb = "https://i.pinimg.com/236x/4b/7f/97/4b7f9782977aea6e8a59dc9d6dae0317.jpg"
+            val expectedThumb =
+                "https://i.pinimg.com/236x/4b/7f/97/4b7f9782977aea6e8a59dc9d6dae0317.jpg"
             then("should return successful result with gif data") {
-                val result = extractor.extract(pinUrl)
+                val pinData = extractor.extract(pinUrl)
 
-                result.isSuccess shouldBe true
-                result.getOrNull()?.let { pinData ->
-                    pinData.image shouldBe expectedImageUrl
-                    pinData.thumbnail shouldBe expectedThumb
-                }
+                pinData.image shouldBe expectedImageUrl
+                pinData.thumbnail shouldBe expectedThumb
             }
         }
 
@@ -53,13 +48,10 @@ class PinterestExtractorTest : BehaviorSpec({
                 "https://i.pinimg.com/originals/0f/c5/dc/0fc5dc1c9001045680ddf55bdb3fe9db.jpg"
 
             then("should return video and image") {
-                val result = extractor.extract(pinUrl)
+                val pinData = extractor.extract(pinUrl)
 
-                result.isSuccess shouldBe true
-                result.getOrNull()?.let { pinData ->
-                    pinData.image shouldBe expectedImageUrl
-                    pinData.video shouldBe expectedVideoUrl
-                }
+                pinData.image shouldBe expectedImageUrl
+                pinData.video shouldBe expectedVideoUrl
             }
         }
 
@@ -71,12 +63,9 @@ class PinterestExtractorTest : BehaviorSpec({
                 "https://i.pinimg.com/originals/09/66/67/09666718ec1ce7a0d500bd5dc46c2cf9.jpg"
 
             then("should return video from story_pin_data") {
-                val result = extractor.extract(pinUrl)
-
-                result.isSuccess shouldBe true
-                result.getOrNull()?.let { pinData ->
-                    pinData.image shouldBe expectedImageUrl
-                    pinData.video shouldBe expectedVideoUrl
+                extractor.extract(pinUrl).run {
+                    image shouldBe expectedImageUrl
+                    video shouldBe expectedVideoUrl
                 }
             }
         }
@@ -98,11 +87,10 @@ class PinterestExtractorTest : BehaviorSpec({
         `when`("no media is present") {
             val pinUrl = "https://www.pinterest.com/pin/123456789/"
 
-            then("should return failure result") {
-                val result = extractor.extract(pinUrl)
-                println(result)
-                result.isFailure shouldBe true
-                result.exceptionOrNull()?.message shouldBe ExtractorError.CANNOT_PARSE_JSON
+            then("should throw exception") {
+                shouldThrow<AppException.ParseJsonError> {
+                    extractor.extract(pinUrl)
+                }
             }
         }
     }

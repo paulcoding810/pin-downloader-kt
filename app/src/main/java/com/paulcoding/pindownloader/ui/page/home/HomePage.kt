@@ -17,10 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -29,7 +25,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,7 +68,6 @@ fun HomePage(
     val clipboardManager = LocalClipboardManager.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
     val view = LocalView.current
 
     fun submit() {
@@ -86,23 +80,6 @@ fun HomePage(
         viewModel.extractLink(text)
     }
 
-    val showSnackbar: (String, String, () -> Unit) -> Unit = { message, actionLabel, block ->
-        coroutineScope.launch {
-
-            val result = snackbarHostState.showSnackbar(
-                message,
-                actionLabel,
-                duration = SnackbarDuration.Short
-            )
-            when (result) {
-                SnackbarResult.ActionPerformed -> {
-                    block()
-                }
-
-                SnackbarResult.Dismissed -> {}
-            }
-        }
-    }
 
     LaunchedEffect(uiState.exception) {
         uiState.exception?.let {
@@ -144,7 +121,6 @@ fun HomePage(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -219,11 +195,12 @@ fun HomePage(
                     FetchResult(
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
-                            .padding(top = 8.dp), viewModel,
-                        showSnackbar = showSnackbar
+                            .padding(top = 8.dp),
+                        viewModel,
                     )
                 }
             }
         }
     }
 }
+

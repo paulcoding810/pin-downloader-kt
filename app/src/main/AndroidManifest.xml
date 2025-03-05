@@ -24,15 +24,9 @@
         android:theme="@style/Theme.PinDownloader"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".QuickDownloadActivity"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Theme.PinDownloader">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:theme="@style/Theme.PinDownloader.Dialog">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -46,10 +40,24 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.PinDownloader">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -59,9 +67,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-8453825871663090~4580071587"/>
+            android:value="ca-app-pub-8453825871663090~4580071587" />
     </application>
 
 </manifest>

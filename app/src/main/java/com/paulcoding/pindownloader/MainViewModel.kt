@@ -31,9 +31,11 @@ class MainViewModel : ViewModel() {
         val exception: AppException? = null,
         val pinData: PinData? = null,
         val isFetchingImages: Boolean = false,
+        val isFetched: Boolean = false,
         val isRedirectingUrl: Boolean = false,
         val isDownloadingImage: Boolean = false,
-        val isDownloadingVideo: Boolean = false
+        val isDownloadingVideo: Boolean = false,
+        val isDownloaded: Boolean = false,
     )
 
     private suspend fun extract(link: String) {
@@ -65,7 +67,7 @@ class MainViewModel : ViewModel() {
             setError(AppException.UnknownError())
         }
 
-        _uiStateFlow.update { it.copy(isFetchingImages = false) }
+        _uiStateFlow.update { it.copy(isFetchingImages = false, isFetched = true) }
     }
 
     private fun setError(appException: AppException) {
@@ -98,6 +100,7 @@ class MainViewModel : ViewModel() {
             checkInternetOrExec {
                 try {
                     val downloadPath = Downloader.download(appContext, link, fileName, headers)
+                    _uiStateFlow.update { it.copy(isDownloadingVideo = false) }
                     onSuccess(downloadPath)
                 } catch (e: AppException) {
                     e.printStackTrace()

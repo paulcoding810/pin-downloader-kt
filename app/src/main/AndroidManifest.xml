@@ -26,6 +26,7 @@
         <activity
             android:name=".QuickDownloadActivity"
             android:exported="true"
+            android:label="Download"
             android:theme="@style/Theme.PinDownloader.Dialog">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

@@ -44,10 +44,10 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Rename apk
-        run: mv app/build/outputs/apk/debug/app-universal-debug.apk hviewer-debug.apk
+        run: mv app/build/outputs/apk/debug/app-universal-debug.apk PinDownloader-debug.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app
-          path: hviewer-debug.apk
+          path: PinDownloader-debug.apk

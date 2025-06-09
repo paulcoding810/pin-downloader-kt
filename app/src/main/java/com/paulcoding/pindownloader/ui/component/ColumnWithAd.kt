@@ -7,16 +7,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.paulcoding.pindownloader.BuildConfig
 import com.paulcoding.pindownloader.R
 
 @Composable
 fun ColumnWithAd(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(modifier = modifier.fillMaxSize()) {
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             content()
         }
-        BannerAd(stringResource(R.string.ad_unit_id))
+        if (BuildConfig.DEBUG) BannerAd(stringResource(R.string.ad_unit_id))
     }
 }

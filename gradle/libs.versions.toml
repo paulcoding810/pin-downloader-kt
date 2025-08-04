@@ -3,6 +3,11 @@ accompanistPermissions = "0.37.2"
 agp = "8.8.2"
 androidtools = "1.0.0"
 coilCompose = "3.1.0"
+koinAndroidxCompose = "4.1"
+koinAndroidxComposeVersion = "4.1.0"
+koinCore = "4.1.0"
+koinKtor = "4.1.0"
+koinLoggerSlf4j = "4.1.0"
 kotestAssertionsCore = "5.9.1"
 kotestProperty = "5.9.1"
 kotestRunnerJunit5 = "5.9.1"
@@ -50,6 +55,10 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxComposeVersion" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinCore" }
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koinKtor" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinLoggerSlf4j" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotestAssertionsCore" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotestProperty" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotestRunnerJunit5" }

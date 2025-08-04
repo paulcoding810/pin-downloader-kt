@@ -7,7 +7,6 @@ import com.paulcoding.pindownloader.extractor.Extractor
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.CustomJson
-import com.paulcoding.pindownloader.helper.KtorClient
 import com.paulcoding.pindownloader.helper.traverseObject
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -52,7 +51,7 @@ class PixivExtractor : Extractor() {
 
     override suspend fun callApi(apiUrl: String): JsonElement {
         val response =
-            KtorClient.client.use { client ->
+            httpClient.use { client ->
                 client.get(apiUrl)
                     .apply {
                         if (status != HttpStatusCode.OK) {

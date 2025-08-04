@@ -7,7 +7,6 @@ import com.paulcoding.pindownloader.extractor.Extractor
 import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.helper.CustomJson
-import com.paulcoding.pindownloader.helper.KtorClient
 import com.paulcoding.pindownloader.helper.traverseObject
 import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
@@ -15,7 +14,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.JsonElement
 import java.net.URI
 
-class PinterestExtractor() : Extractor() {
+class PinterestExtractor : Extractor() {
     override val source: PinSource
         get() = PinSource.PINTEREST
 
@@ -32,19 +31,6 @@ class PinterestExtractor() : Extractor() {
         response: JsonElement,
         link: String,
     ): PinData {
-        // response.data.v3GetPinQuery.data.videos.videoList.v720P.url
-        // response.data.v3GetPinQuery.data.storyPinData.pages[0].blocks[0].videoData.videoList720P.v720P.url
-        // response.data.v3GetPinQuery.data.videos.videoList.v720P.thumbnail
-
-        // response.data.v3GetPinQuery.data.imageSpec_236x.url
-        // response.data.v3GetPinQuery.data.imageSpec_orig.url
-
-        // response.data.v3GetPinQuery.data.closeupAttribution.fullName
-        // response.data.v3GetPinQuery.data.title
-        // response.data.v3GetPinQuery.data.gridTitle
-
-        // response.data.v3GetPinQuery.data.entityId
-
         traverseObject<JsonElement>(
             response,
             listOf(
@@ -100,7 +86,7 @@ class PinterestExtractor() : Extractor() {
         val baseUri = "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}"
 
         val response =
-            KtorClient.client.use { client ->
+            httpClient.use { client ->
                 client.get(apiUrl)
                     .apply {
                         if (status != HttpStatusCode.OK) {

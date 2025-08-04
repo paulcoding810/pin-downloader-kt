@@ -14,12 +14,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.ui.page.home.HomePage
 
 
 @Composable
-fun AppEntry(viewModel: MainViewModel) {
+fun AppEntry() {
     val navController = rememberNavController()
 
     NavHost(
@@ -27,7 +26,7 @@ fun AppEntry(viewModel: MainViewModel) {
         startDestination = Route.HOME,
     ) {
         animatedComposable(Route.HOME) {
-            HomePage(viewModel = viewModel, viewHistory = {
+            HomePage(viewHistory = {
                 navController.navigate(Route.HISTORY)
             }, navToPremium = {
                 navController.navigate(Route.PREMIUM)

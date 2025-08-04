@@ -28,7 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -50,12 +50,13 @@ import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.icon.History
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel,
+    viewModel: MainViewModel = koinViewModel(),
     viewHistory: () -> Unit,
     navToPremium: () -> Unit,
 ) {
@@ -64,7 +65,7 @@ fun HomePage(
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardManager = LocalClipboard.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val view = LocalView.current
@@ -102,11 +103,14 @@ fun HomePage(
                 if (event == Lifecycle.Event.ON_RESUME) {
                     coroutineScope.launch {
                         delay(1000L)
-                        clipboardManager.getText()?.text?.also {
-                            if (it.startsWith("http") && it != text) {
-                                viewModel.setLink(it)
-                            }
+                        val clipData = clipboardManager.getClipEntry()?.clipData ?: return@launch
+                        if (clipData.itemCount == 0) return@launch
+
+                        val link = clipData.getItemAt(0).text?.toString() ?: return@launch
+                        if (link.startsWith("http") && link != text) {
+                            viewModel.setLink(link)
                         }
+
                     }
                 }
             }

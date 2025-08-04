@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel(private val downloader: Downloader) : ViewModel() {
     private var _uiStateFlow = MutableStateFlow(UiState())
     val uiStateFlow = _uiStateFlow.asStateFlow()
 
@@ -92,7 +92,7 @@ class MainViewModel : ViewModel() {
             }
             checkInternetOrExec {
                 try {
-                    val downloadPath = Downloader.download(appContext, link, fileName, headers)
+                    val downloadPath = downloader.download(appContext, link, fileName, headers)
                     _uiStateFlow.update { it.copy(isDownloadingVideo = false) }
                     onSuccess(downloadPath)
                 } catch (e: AppException) {

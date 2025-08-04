@@ -1,14 +1,15 @@
 package com.paulcoding.pindownloader.extractor
 
 import com.paulcoding.pindownloader.AppException
-import com.paulcoding.pindownloader.helper.KtorClient
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import org.koin.java.KoinJavaComponent.inject
 
 abstract class Extractor {
+    protected val httpClient: HttpClient by inject(HttpClient::class.java)
     abstract val source: PinSource
     abstract val idRegex: String
 
@@ -25,7 +26,7 @@ abstract class Extractor {
 
     protected open suspend fun callApi(apiUrl: String): JsonElement {
         val response =
-            KtorClient.client.use { client ->
+            httpClient.use { client ->
                 client.get(apiUrl)
                     .apply {
                         if (status != HttpStatusCode.OK) {

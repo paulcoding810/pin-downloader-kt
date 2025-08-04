@@ -2,6 +2,7 @@ package com.paulcoding.pindownloader.helper
 
 import android.content.Context
 import com.paulcoding.pindownloader.AppException
+import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.statement.readRawBytes
@@ -9,7 +10,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-object Downloader {
+class Downloader(private val httpClient: HttpClient) {
     private fun getFileNameFromUrl(url: String): String {
         val trimmedUrl = url.removeSuffix("/")
         return trimmedUrl.substringAfterLast("/")
@@ -31,7 +32,7 @@ object Downloader {
         val name = fileName ?: getFileNameFromUrl(imageUrl)
         val file = File(getDownloadDir(context), name)
 
-        KtorClient.client.use { client ->
+        httpClient.use { client ->
             client.get(imageUrl) {
                 headers {
                     customHeaders.forEach { (key, value) ->

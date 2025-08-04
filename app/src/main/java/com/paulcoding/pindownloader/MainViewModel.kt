@@ -8,7 +8,6 @@ import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.extractor.PinType
 import com.paulcoding.pindownloader.extractor.pinterest.PinterestExtractor
 import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
-import com.paulcoding.pindownloader.helper.AppPreference
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.NetworkUtil
 import kotlinx.coroutines.Dispatchers
@@ -24,15 +23,12 @@ class MainViewModel : ViewModel() {
     private val pinterestExtractor = PinterestExtractor()
     private val pixivExtractor = PixivExtractor()
 
-    val isPremium = AppPreference.isPremium
-
     data class UiState(
         val input: String = "",
         val exception: AppException? = null,
         val pinData: PinData? = null,
         val isFetchingImages: Boolean = false,
         val isFetched: Boolean = false,
-        val isRedirectingUrl: Boolean = false,
         val isDownloadingImage: Boolean = false,
         val isDownloadingVideo: Boolean = false,
         val isDownloaded: Boolean = false,
@@ -85,9 +81,6 @@ class MainViewModel : ViewModel() {
         fileName: String? = null,
         onSuccess: (path: String) -> Unit = {}
     ) {
-        if (source == PinSource.PIXIV && !isPremium.value) {
-            return setError(AppException.PremiumRequired())
-        }
         val headers =
             if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()
 

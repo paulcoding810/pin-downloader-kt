@@ -15,13 +15,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.paulcoding.pindownloader.MainViewModel
-import com.paulcoding.pindownloader.ui.PremiumViewModel
 import com.paulcoding.pindownloader.ui.page.home.HomePage
-import com.paulcoding.pindownloader.ui.page.premium.PremiumPage
 
 
 @Composable
-fun AppEntry(viewModel: MainViewModel, premiumViewModel: PremiumViewModel) {
+fun AppEntry(viewModel: MainViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -38,11 +36,6 @@ fun AppEntry(viewModel: MainViewModel, premiumViewModel: PremiumViewModel) {
 
         animatedComposable(Route.HISTORY) {
             HistoryPage(goBack = { navController.popBackStack() })
-        }
-
-        animatedComposable(Route.PREMIUM)
-        {
-            PremiumPage(viewModel = premiumViewModel, goBack = { navController.popBackStack() })
         }
     }
 }

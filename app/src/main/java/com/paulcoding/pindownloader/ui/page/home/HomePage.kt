@@ -46,7 +46,6 @@ import com.paulcoding.androidtools.makeToast
 import com.paulcoding.pindownloader.AppException
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
-import com.paulcoding.pindownloader.ui.component.ColumnWithAd
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.icon.History
 import kotlinx.coroutines.delay
@@ -136,14 +135,11 @@ fun HomePage(
                     IconButton(onClick = viewHistory) {
                         Icon(History, "History")
                     }
-//                    IconButton(onClick = navToPremium) {
-//                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Premium")
-//                    }
                 },
             )
         }
     ) { paddingValues ->
-        ColumnWithAd(
+        Column(
             modifier = modifier
                 .padding(paddingValues)
                 .fillMaxSize()
@@ -185,7 +181,7 @@ fun HomePage(
                     },
                 )
                 Button(onClick = { submit() }, enabled = text.isNotEmpty()) {
-                    if (uiState.isFetchingImages || uiState.isRedirectingUrl) {
+                    if (uiState.isFetchingImages) {
                         Indicator()
                     } else {
                         Text(LocalContext.current.getString(R.string.fetch))

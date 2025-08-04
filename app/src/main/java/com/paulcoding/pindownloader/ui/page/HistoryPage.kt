@@ -3,6 +3,7 @@ package com.paulcoding.pindownloader.ui.page
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,7 +45,6 @@ import com.paulcoding.pindownloader.helper.Config
 import com.paulcoding.pindownloader.helper.VIDEO_REGEX
 import com.paulcoding.pindownloader.helper.getFiles
 import com.paulcoding.pindownloader.helper.viewFile
-import com.paulcoding.pindownloader.ui.component.ColumnWithAd
 import com.paulcoding.pindownloader.ui.icon.PlayCircle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,9 +65,11 @@ fun HistoryPage(goBack: () -> Unit) {
         }
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize(),
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text("Gallery") },
+            TopAppBar(
+                title = { Text("Gallery") },
                 modifier = Modifier.padding(8.dp),
                 navigationIcon = {
                     IconButton(onClick = goBack) {
@@ -95,7 +97,7 @@ fun HistoryPage(goBack: () -> Unit) {
                 })
         }
     ) { paddingValues ->
-        ColumnWithAd(modifier = Modifier.padding(paddingValues)) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier

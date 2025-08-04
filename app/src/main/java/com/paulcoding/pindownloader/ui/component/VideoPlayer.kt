@@ -1,6 +1,5 @@
 package com.paulcoding.pindownloader.ui.component
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -29,7 +29,7 @@ fun VideoPlayer(
     val exoPlayer =
         remember {
             ExoPlayer.Builder(context).build().apply {
-                setMediaItem(MediaItem.fromUri(Uri.parse(videoUri)))
+                setMediaItem(MediaItem.fromUri(videoUri.toUri()))
                 prepare()
                 playWhenReady = true
 

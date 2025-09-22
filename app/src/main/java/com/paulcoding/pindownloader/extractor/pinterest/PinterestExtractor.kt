@@ -40,24 +40,29 @@ class PinterestExtractor : Extractor() {
                 "data"
             )
         )?.let { data ->
-            val id = traverseObject<String>(data, "entityId".split('.'))
+            val id = traverseObject<String>(data, "entityId")
                 ?: throw (AppException.PinNotFoundError(link))
-            val imageUrl = traverseObject<String>(data, "imageSpec_orig.url".split('.'))
-            val thumbnail = traverseObject<String>(data, "imageSpec_236x.url".split('.'))
+            val imageUrl = traverseObject<String>(data, "imageSpec_orig.url")
+            val thumbnail = traverseObject<String>(data, "imageSpec_236x.url")
             val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
                 data,
                 listOf("gridTitle")
             )
-            val author = traverseObject<String>(data, "closeupAttribution.fullName".split('.'))
-                ?: traverseObject<String>(data, "originPinner.fullName".split('.'))
+            val author = traverseObject<String>(data, "closeupAttribution.fullName")
+                ?: traverseObject<String>(data, "originPinner.fullName")
             val videoUrl = traverseObject<String>(
                 data,
-                "videos.videoList.v720P.url".split('.'),
+                "videos.videoList.v720P.url",
             ) ?: traverseObject<String>(
                 data,
-                "storyPinData.pages.[].blocks.[].videoData.videoList720P.v720P.url".split('.'),
+                "videos.videoList.V_HLSV3_MOBILE.url",
+            ) ?: traverseObject<String>(
+                data,
+                "storyPinData.pages.[].blocks.[].videoDataV2.videoList720P.v720P.url",
+            ) ?: traverseObject<String>(
+                data,
+                "storyPinData.pages.[].blocks.[].videoDataV2.videoListMobile.vHLSV3MOBILE.url"
             )
-
             if (videoUrl == null && imageUrl == null) {
                 throw AppException.PinNotFoundError(link)
             }

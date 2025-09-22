@@ -69,7 +69,6 @@ fun DownloadView(viewModel: MainViewModel) {
     val width = LocalConfiguration.current.screenWidthDp.dp
     val context = LocalActivity.current
 
-    println("state.isDownloaded ${state.isFetched}")
     LaunchedEffect(state.isFetched) {
         if (state.isFetched) {
             sheetState.expand()

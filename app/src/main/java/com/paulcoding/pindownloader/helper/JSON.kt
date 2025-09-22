@@ -34,3 +34,9 @@ inline fun <reified T> traverseObject(
     }
     return curr?.let { CustomJson.decodeFromJsonElement<T>(it) }
 }
+
+
+inline fun <reified T> traverseObject(
+    obj: JsonElement,
+    keys: String,
+): T? = traverseObject(obj, keys.split("."))

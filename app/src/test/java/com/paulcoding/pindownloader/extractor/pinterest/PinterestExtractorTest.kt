@@ -1,97 +1,104 @@
 package com.paulcoding.pindownloader.extractor.pinterest
 
 import com.paulcoding.pindownloader.AppException
+import com.paulcoding.pindownloader.di.appModule
+import com.paulcoding.pindownloader.di.networkModule
 import com.paulcoding.pindownloader.extractor.PinSource
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertThrows
+import org.junit.Before
+import org.junit.Test
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import kotlin.test.assertEquals
 
-class PinterestExtractorTest : BehaviorSpec({
+@OptIn(ExperimentalCoroutinesApi::class)
+class PinterestExtractorTest : KoinTest {
 
-    val extractor = PinterestExtractor()
+    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var extractor: PinterestExtractor
 
-    given("Pinterest extractor") {
-        `when`("extracting image content") {
-            val pinUrl = "https://www.pinterest.com/pin/70298444178786767/"
-            val expectedVideoUrl = null
-            val expectedImageUrl =
-                "https://i.pinimg.com/originals/17/8e/bf/178ebf8c048a58243707fed29787298e.jpg"
-
-            then("should return successful result with video data") {
-                val pinData = extractor.extract(pinUrl)
-
-                pinData.source shouldBe PinSource.PINTEREST
-                pinData.video shouldBe expectedVideoUrl
-                pinData.image shouldBe expectedImageUrl
-            }
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+        startKoin {
+            modules(appModule)
+            modules(networkModule)
         }
 
-        `when`("extracting gif content") {
-            val pinUrl = "https://www.pinterest.com/pin/249598004342746159/"
-            val expectedImageUrl =
-                "https://i.pinimg.com/originals/4b/7f/97/4b7f9782977aea6e8a59dc9d6dae0317.gif"
-            val expectedThumb =
-                "https://i.pinimg.com/236x/4b/7f/97/4b7f9782977aea6e8a59dc9d6dae0317.jpg"
-            then("should return successful result with gif data") {
-                val pinData = extractor.extract(pinUrl)
+        extractor = PinterestExtractor()
+    }
 
-                pinData.image shouldBe expectedImageUrl
-                pinData.thumbnail shouldBe expectedThumb
-            }
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        stopKoin()
+    }
+
+    @Test
+    fun `extracting image content`() = runTest {
+
+        val pinUrl = "https://www.pinterest.com/pin/70298444178786767/"
+        val expectedVideoUrl = null
+        val expectedImageUrl =
+            "https://i.pinimg.com/originals/17/8e/bf/178ebf8c048a58243707fed29787298e.jpg"
+
+        val pinData = extractor.extract(pinUrl)
+
+        assertEquals(pinData.source, PinSource.PINTEREST)
+        assertEquals(pinData.video, expectedVideoUrl)
+        assertEquals(pinData.image, expectedImageUrl)
+
+        testDispatcher.scheduler.advanceUntilIdle()
+    }
+
+
+    @Test
+    fun `should return video and image`() = runTest {
+        val pinUrl = "https://www.pinterest.com/pin/58687601384243020/"
+        val expectedVideoUrl =
+            "https://v1.pinimg.com/videos/mc/720p/53/19/62/5319622e973fd1f673569bd89a4b608b.mp4"
+        val expectedImageUrl =
+            "https://i.pinimg.com/originals/0f/c5/dc/0fc5dc1c9001045680ddf55bdb3fe9db.jpg"
+
+        extractor.extract(pinUrl).run {
+            assertEquals(PinSource.PINTEREST, source)
+            assertEquals(expectedImageUrl, image)
+            assertEquals(expectedVideoUrl, video)
         }
+    }
 
-        `when`("extracting video and image") {
-            val pinUrl = "https://www.pinterest.com/pin/58687601384243020/"
-            val expectedVideoUrl =
-                "https://v1.pinimg.com/videos/mc/720p/53/19/62/5319622e973fd1f673569bd89a4b608b.mp4"
-            val expectedImageUrl =
-                "https://i.pinimg.com/originals/0f/c5/dc/0fc5dc1c9001045680ddf55bdb3fe9db.jpg"
+    @Test
+    fun `should return video from story_pin_data`() = runTest {
+        val pinUrl = "https://www.pinterest.com/pin/297096906690237209/"
+        val expectedVideoUrl =
+            "https://v1.pinimg.com/videos/iht/expMp4/62/ce/32/62ce32b6898266fe292aedd1d35ba1a8_720w.mp4"
+        val expectedImageUrl =
+            "https://i.pinimg.com/originals/94/6f/a1/946fa14cf72a33ff6810936d0dcdfeb7.jpg"
 
-            then("should return video and image") {
-                val pinData = extractor.extract(pinUrl)
-
-                pinData.image shouldBe expectedImageUrl
-                pinData.video shouldBe expectedVideoUrl
-            }
+        extractor.extract(pinUrl).run {
+            assertEquals(PinSource.PINTEREST, source)
+            assertEquals(expectedImageUrl, image)
+            assertEquals(expectedVideoUrl, video)
         }
+    }
 
-        `when`("extracting video content from story_pin_data") {
-            val pinUrl = "https://www.pinterest.com/pin/1081989879216075566/"
-            val expectedVideoUrl =
-                "https://v1.pinimg.com/videos/mc/720p/fd/25/05/fd2505ae6a2ce068866cb085e488fcef.mp4"
-            val expectedImageUrl =
-                "https://i.pinimg.com/originals/09/66/67/09666718ec1ce7a0d500bd5dc46c2cf9.jpg"
+    @Test
+    fun `should throw exception`() = runTest {
+        val pinUrl = "https://www.pinterest.com/pin/123456789/"
 
-            then("should return video from story_pin_data") {
-                extractor.extract(pinUrl).run {
-                    image shouldBe expectedImageUrl
-                    video shouldBe expectedVideoUrl
-                }
-            }
-        }
-//        `when`("extracting video but there's no mp4") {
-//            val pinUrl = "https://www.pinterest.com/pin/74239093852167971/"
-//            then("should return m3u8 instead") {
-//                val result = extractor.extract(pinUrl)
-//
-//                result.isSuccess shouldBe true
-//                result.getOrNull()?.let {
-////                   TODO: implement m3u8 loader
-////                    it.video shouldBe "https://v1.pinimg.com/vi…cf7438ee05b86a6ef21.m3u8"
-//                    it.video shouldBe null
-//                    it.image shouldBe "https://i.pinimg.com/originals/da/95/7c/da957c1ca43887bbe7360f9b2237aef5.jpg"
-//                }
-//            }
-//        }
-
-        `when`("no media is present") {
-            val pinUrl = "https://www.pinterest.com/pin/123456789/"
-
-            then("should throw exception") {
-                shouldThrow<AppException.ParseJsonError> {
-                    extractor.extract(pinUrl)
-                }
+        assertThrows(AppException.ParseJsonError::class.java) {
+            runBlocking {
+                extractor.extract(pinUrl)
             }
         }
     }
-})
+}

@@ -75,9 +75,12 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.mock)
+
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
@@ -94,7 +97,9 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
+    implementation(libs.koin.test)
+    implementation(libs.slf4j.android)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -102,18 +107,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(libs.mockk)
+    testImplementation(libs.koin.test.junit4)
+    testImplementation(libs.koin.logger.slf4j)
 
-    testImplementation(libs.kotest.runner.junit5)
-    testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.property)
-
-    // For Android instrumentation tests
-    androidTestImplementation(libs.kotest.runner.junit5)
-    androidTestImplementation(libs.kotest.assertions.core)
-    androidTestImplementation(libs.kotest.property)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
+    testImplementation(libs.kotlinx.coroutines.test)
 }

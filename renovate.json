@@ -4,7 +4,7 @@
     "config:base"
   ],
   "schedule": [
-    "0 0 1 1 *"
+    "on the first day of January"
   ],
   "automerge": false,
   "automergeType": "pr",

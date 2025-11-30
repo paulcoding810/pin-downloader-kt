@@ -33,12 +33,7 @@ class PinterestExtractor : Extractor() {
     ): PinData {
         traverseObject<JsonElement>(
             response,
-            listOf(
-                "response",
-                "data",
-                "v3GetPinQuery",
-                "data"
-            )
+            "data.v3GetPinQuery.data".split('.')
         )?.let { data ->
             val id = traverseObject<String>(data, "entityId")
                 ?: throw (AppException.PinNotFoundError(link))
@@ -103,8 +98,12 @@ class PinterestExtractor : Extractor() {
 
 
         val initialData =
-            doc.select("script[data-relay-response=true][type=application/json]").last()
-                ?.html() // use html() for get script's inner text
+            doc.select("script[data-relay-completed-request=true]").last()
+                ?.html()
+                ?.let { html ->
+                    // Extracts JSON from the script content, which starts with { and ends with }
+                    Regex("""\{.+\}""").find(html)?.value
+                }
 
         if (initialData.isNullOrEmpty()) {
             throw AppException.ParseJsonError(apiUrl)

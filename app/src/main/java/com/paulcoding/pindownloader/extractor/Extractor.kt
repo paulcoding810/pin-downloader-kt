@@ -26,14 +26,12 @@ abstract class Extractor {
 
     protected open suspend fun callApi(apiUrl: String): JsonElement {
         val response =
-            httpClient.use { client ->
-                client.get(apiUrl)
-                    .apply {
-                        if (status != HttpStatusCode.OK) {
-                            throw (AppException.PinNotFoundError(apiUrl))
-                        }
-                    }.body<JsonElement>()
-            }
+            httpClient.get(apiUrl)
+                .apply {
+                    if (status != HttpStatusCode.OK) {
+                        throw (AppException.PinNotFoundError(apiUrl))
+                    }
+                }.body<JsonElement>()
 
         return response
     }

@@ -17,15 +17,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
@@ -43,9 +47,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.paulcoding.androidtools.makeToast
-import com.paulcoding.pindownloader.AppException
+import com.paulcoding.pindownloader.ExtractState
 import com.paulcoding.pindownloader.MainViewModel
 import com.paulcoding.pindownloader.R
+import com.paulcoding.pindownloader.component.AppExceptionText
+import com.paulcoding.pindownloader.component.DownloadEffect
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.icon.History
 import kotlinx.coroutines.delay
@@ -58,10 +64,10 @@ fun HomePage(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = koinViewModel(),
     viewHistory: () -> Unit,
-    navToPremium: () -> Unit,
 ) {
     val uiState by viewModel.uiStateFlow.collectAsState()
-    val text = uiState.input
+    val (extractState, downloadState) = uiState
+    var text by remember { mutableStateOf("https://www.pinterest.com/pin/70298444178786767") }
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -69,6 +75,7 @@ fun HomePage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val view = LocalView.current
+    val snackBarHostState = remember { SnackbarHostState() }
 
     fun submit() {
         if (text.isEmpty()) {
@@ -80,22 +87,7 @@ fun HomePage(
         viewModel.extractLink(text)
     }
 
-
-    LaunchedEffect(uiState.exception) {
-        uiState.exception?.let {
-            when (it) {
-                is AppException.PinNotFoundError -> makeToast(R.string.pin_not_found)
-                is AppException.InvalidUrlError -> makeToast(R.string.invalid_url)
-                is AppException.NetworkError -> makeToast(R.string.network_error)
-                is AppException.DownloadError -> makeToast(R.string.failed_to_download)
-                is AppException.PremiumRequired -> navToPremium()
-                is AppException.ParseJsonError -> makeToast(R.string.failed_to_fetch_images)
-                is AppException.ParseIdError -> makeToast(R.string.failed_to_fetch_images)
-                is AppException.UnknownError -> makeToast(R.string.something_went_wrong)
-                else -> makeToast(it.message ?: it.toString())
-            }
-        }
-    }
+    DownloadEffect(downloadState, snackBarHostState)
 
     DisposableEffect(lifecycleOwner) {
         val observer =
@@ -108,9 +100,8 @@ fun HomePage(
 
                         val link = clipData.getItemAt(0).text?.toString() ?: return@launch
                         if (link.startsWith("http") && link != text) {
-                            viewModel.setLink(link)
+                            text = link
                         }
-
                     }
                 }
             }
@@ -141,7 +132,8 @@ fun HomePage(
                     }
                 },
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackBarHostState) }
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -159,7 +151,7 @@ fun HomePage(
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = text,
-                    onValueChange = { viewModel.setLink(it) },
+                    onValueChange = { text = it },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Go,
@@ -184,20 +176,22 @@ fun HomePage(
                         }
                     },
                 )
-                Button(onClick = { submit() }, enabled = text.isNotEmpty()) {
-                    if (uiState.isFetchingImages) {
-                        Indicator()
-                    } else {
-                        Text(LocalContext.current.getString(R.string.fetch))
+
+                when (extractState) {
+                    ExtractState.Idle -> {
+                        Button(onClick = { submit() }, enabled = text.isNotEmpty()) {
+                            Text(LocalContext.current.getString(R.string.fetch))
+                        }
                     }
-                }
-                uiState.pinData?.let {
-                    FetchResult(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .padding(top = 8.dp),
-                        viewModel,
+                    is ExtractState.Loading -> Indicator()
+                    is ExtractState.Success -> FetchResult(
+                        pinData = extractState.pinData,
+                        downloadState = downloadState,
+                        onAction = viewModel::dispatch,
                     )
+                    is ExtractState.Error -> {
+                        AppExceptionText(extractState.exception)
+                    }
                 }
             }
         }

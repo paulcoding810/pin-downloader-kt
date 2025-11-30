@@ -1,15 +1,22 @@
 package com.paulcoding.pindownloader
 
+import android.content.Context
+import android.graphics.drawable.BitmapDrawable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.Bitmap
+import coil3.BitmapImage
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
 import com.paulcoding.pindownloader.App.Companion.appContext
-import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
-import com.paulcoding.pindownloader.extractor.PinType
 import com.paulcoding.pindownloader.extractor.pinterest.PinterestExtractor
 import com.paulcoding.pindownloader.extractor.pixiv.PixivExtractor
 import com.paulcoding.pindownloader.helper.Downloader
 import com.paulcoding.pindownloader.helper.NetworkUtil
+import com.paulcoding.pindownloader.ui.model.DownloadInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,25 +24,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val downloader: Downloader) : ViewModel() {
-    private var _uiStateFlow = MutableStateFlow(UiState())
-    val uiStateFlow = _uiStateFlow.asStateFlow()
+    private var _state = MutableStateFlow<UiState>(UiState())
+    val uiStateFlow = _state.asStateFlow()
 
     private val pinterestExtractor = PinterestExtractor()
     private val pixivExtractor = PixivExtractor()
 
-    data class UiState(
-        val input: String = "",
-        val exception: AppException? = null,
-        val pinData: PinData? = null,
-        val isFetchingImages: Boolean = false,
-        val isFetched: Boolean = false,
-        val isDownloadingImage: Boolean = false,
-        val isDownloadingVideo: Boolean = false,
-        val isDownloaded: Boolean = false,
-    )
 
     private suspend fun extract(link: String) {
-        _uiStateFlow.update { UiState().copy(input = link) }
+        _state.update { it.copy(extractState = ExtractState.Loading(link)) }
 
         val extractor =
             when {
@@ -45,93 +42,98 @@ class MainViewModel(private val downloader: Downloader) : ViewModel() {
             }
 
         if (extractor == null) {
-            setError(AppException.InvalidUrlError(link))
+            setExtractError(AppException.InvalidUrlError(link))
             return
         }
 
-        _uiStateFlow.update { it.copy(isFetchingImages = true) }
-
         try {
             extractor.extract(link).let { data ->
-                _uiStateFlow.update { it.copy(pinData = data) }
+                val bitmap = data.image?.let {
+                    downloadImageBitmap(appContext, it)
+                }
+                _state.update { it.copy(extractState = ExtractState.Success(data, bitmap)) }
+
             }
-        } catch (e: AppException) {
-            e.printStackTrace()
-            setError(e)
         } catch (e: Exception) {
             e.printStackTrace()
-            setError(AppException.UnknownError())
+            if (e is AppException) {
+                setExtractError(e)
+            }
+            setExtractError(AppException.UnknownError())
         }
-
-        _uiStateFlow.update { it.copy(isFetchingImages = false, isFetched = true) }
     }
 
-    private fun setError(appException: AppException) {
-        _uiStateFlow.update { it.copy(exception = appException) }
+    private fun setExtractError(appException: AppException) {
+        _state.update { it.copy(extractState = ExtractState.Error(appException)) }
     }
 
     fun clearPinData() {
-        _uiStateFlow.update { UiState() }
+        _state.value = UiState()
     }
 
-    fun download(
-        link: String,
-        type: PinType = PinType.IMAGE,
-        source: PinSource = PinSource.PINTEREST,
-        fileName: String? = null,
-        onSuccess: (path: String) -> Unit = {}
-    ) {
+    private suspend fun downloadImageBitmap(context: Context, url: String): Bitmap? {
+        val loader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false) // Disable hardware bitmaps if needed
+            .build()
+
+        val result = loader.execute(request)
+        if (result is SuccessResult) {
+            return (result.image as BitmapImage).bitmap
+        }
+        return null
+    }
+
+    fun dispatch(action: MainAction) {
+        when (action) {
+            is MainAction.ExtractLink -> extractLink(action.url)
+            is MainAction.Download -> download(action.downloadInfo)
+            is MainAction.ClearPinData -> clearPinData()
+        }
+    }
+
+    private fun download(downloadInfo: DownloadInfo) {
+        val (link, type, source, fileName) = downloadInfo
+
         val headers =
             if (source == PinSource.PIXIV) mapOf("referer" to "https://www.pixiv.net/") else mapOf()
 
         viewModelScope.launch(Dispatchers.IO) {
-            if (type == PinType.VIDEO) {
-                _uiStateFlow.update { it.copy(isDownloadingVideo = true) }
-            } else {
-                _uiStateFlow.update { it.copy(isDownloadingImage = true) }
-            }
+            _state.update { it.copy(downloadState = DownloadState.Loading(link)) }
             checkInternetOrExec {
                 try {
                     val downloadPath = downloader.download(appContext, link, fileName, headers)
-                    _uiStateFlow.update { it.copy(isDownloadingVideo = false) }
-                    onSuccess(downloadPath)
-                } catch (e: AppException) {
+                    _state.update { it.copy(downloadState = DownloadState.Success(downloadPath)) }
+                } catch (e: Exception) {
                     e.printStackTrace()
-                    setError(e)
+
+                    if (e is AppException)
+                        _state.update { it.copy(downloadState = DownloadState.Error(e)) }
+                    else
+                        _state.update { it.copy(downloadState = DownloadState.Error(AppException.DownloadError(link))) }
                 }
             }
-
-            if (type == PinType.VIDEO) {
-                _uiStateFlow.update { it.copy(isDownloadingVideo = false) }
-            } else {
-                _uiStateFlow.update { it.copy(isDownloadingImage = false) }
-            }
         }
-    }
-
-    fun setLink(link: String) {
-        _uiStateFlow.update { it.copy(input = link) }
     }
 
     private suspend fun checkInternetOrExec(block: suspend () -> Unit) {
         if (NetworkUtil.isInternetAvailable()) {
             return block()
         }
-        return setError(AppException.NetworkError())
+        return setExtractError(AppException.NetworkError())
     }
 
     fun extractLink(msg: String) {
-        _uiStateFlow.update { UiState().copy(input = msg) }
         viewModelScope.launch(Dispatchers.IO) {
             checkInternetOrExec {
                 val urlPattern = """(https?://\S+)""".toRegex()
                 val link = urlPattern.find(msg)?.value
 
                 if (link == null) {
-                    setError(AppException.MessageError())
+                    setExtractError(AppException.MessageError())
                     return@checkInternetOrExec
                 }
-                setLink(link)
                 extract(link)
             }
         }

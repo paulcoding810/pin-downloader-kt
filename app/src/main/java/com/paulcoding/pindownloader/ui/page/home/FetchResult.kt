@@ -5,25 +5,22 @@ import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import coil3.network.NetworkHeaders
@@ -36,54 +33,31 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
 import com.paulcoding.androidtools.makeToast
-import com.paulcoding.pindownloader.MainViewModel
-import com.paulcoding.pindownloader.R
+import com.paulcoding.pindownloader.DownloadState
+import com.paulcoding.pindownloader.MainAction
+import com.paulcoding.pindownloader.component.DownloadIcon
+import com.paulcoding.pindownloader.component.LoadingOverlay
+import com.paulcoding.pindownloader.extractor.PinData
 import com.paulcoding.pindownloader.extractor.PinSource
 import com.paulcoding.pindownloader.extractor.PinType
-import com.paulcoding.pindownloader.helper.viewFile
 import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.component.VideoPlayer
-import kotlinx.coroutines.launch
+import com.paulcoding.pindownloader.ui.model.DownloadInfo
+import com.paulcoding.pindownloader.ui.theme.PinDownloaderTheme
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun FetchResult(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel,
-    onDownloaded: (() -> Unit)? = null,
+    pinData: PinData,
+    downloadState: DownloadState,
+    showLoadingMaxSize: Boolean = true,
+    onAction: (MainAction) -> Unit,
 ) {
-    val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
-
-    val uiState by viewModel.uiStateFlow.collectAsState()
-    val pinData = uiState.pinData
-
     val storagePermission =
         rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE) { granted ->
-            if (!granted)
-                makeToast("Permission Denied!")
+            if (!granted) makeToast("Permission Denied!")
         }
-
-
-    fun onSuccess(path: String) {
-        coroutineScope.launch {
-
-            val result = snackbarHostState.showSnackbar(
-                context.getString(R.string.downloaded_successfully),
-                context.getString(R.string.view),
-                duration = SnackbarDuration.Short,
-            )
-            when (result) {
-                SnackbarResult.ActionPerformed -> {
-                    viewFile(context, path)
-                    onDownloaded?.invoke()
-                }
-
-                SnackbarResult.Dismissed -> {}
-            }
-        }
-    }
 
     fun checkPermissionOrDownload(block: () -> Unit) {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q || storagePermission.status == PermissionStatus.Granted) {
@@ -93,40 +67,38 @@ fun FetchResult(
         }
     }
 
-    Box {
+    Box(modifier = modifier) {
         Column(
-            modifier = modifier.verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            pinData?.apply {
+            pinData.apply {
                 if (description != null) {
                     Text(description)
                 }
 
                 if (video != null) {
-                    VideoPlayer(
-                        videoUri = video,
-                        modifier = Modifier.size(width = 350.dp, height = 500.dp),
-                    )
-
-                    Button(onClick = {
-                        checkPermissionOrDownload {
-                            viewModel.download(
-                                video,
-                                PinType.VIDEO,
-                                pinData.source,
-                                null,
-                            ) {
-                                onSuccess(it)
+                    DownloadContent(
+                        onClick = {
+                            checkPermissionOrDownload {
+                                onAction(
+                                    MainAction.Download(
+                                        downloadInfo = DownloadInfo(
+                                            link = video,
+                                            type = PinType.VIDEO,
+                                            source = pinData.source,
+                                        )
+                                    )
+                                )
                             }
-                        }
-                    }) {
-                        if (uiState.isDownloadingVideo) {
-                            Indicator()
-                        } else {
-                            Text(stringResource(R.string.download_video))
-                        }
+                        }) {
+                        VideoPlayer(
+                            videoUri = video,
+                            modifier = Modifier.size(width = 350.dp, height = 500.dp),
+                        )
                     }
                 }
                 if (image != null) {
@@ -149,35 +121,75 @@ fun FetchResult(
                                 }
                                 build()
                             }
-                    SubcomposeAsyncImage(
-                        model = imageRequest,
-                        contentDescription = null,
-                        modifier = Modifier.size(width = 350.dp, height = 500.dp),
-                        contentScale = ContentScale.Crop,
-                        loading = {
-                            Indicator()
-                        },
-                    )
 
-                    Button(onClick = {
+                    DownloadContent(onClick = {
                         checkPermissionOrDownload {
-                            viewModel.download(image, PinType.IMAGE, pinData.source, null) {
-                                onSuccess(it)
-                            }
+                            onAction(
+                                MainAction.Download(
+                                    downloadInfo = DownloadInfo(
+                                        link = image,
+                                        type = PinType.IMAGE,
+                                        source = pinData.source,
+                                    )
+                                )
+                            )
                         }
                     }) {
-                        if (uiState.isDownloadingImage) {
-                            Indicator()
-                        } else {
-                            Text(stringResource(R.string.download_image))
-                        }
+                        SubcomposeAsyncImage(
+                            model = imageRequest,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f)
+                                .aspectRatio(1f),
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                Indicator()
+                            },
+                        )
                     }
                 }
             }
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        if (downloadState is DownloadState.Loading) {
+            LoadingOverlay(showLoadingMaxSize)
+        }
+    }
+}
+
+@Composable
+private fun DownloadContent(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Box {
+        content()
+        FilledIconButton(
+            modifier = Modifier.align(Alignment.TopEnd),
+            onClick = onClick
+        ) {
+            Icon(DownloadIcon, "Download")
+        }
+    }
+}
+
+
+@Preview
+@Composable
+private fun Preview() {
+    PinDownloaderTheme() {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+            FetchResult(
+                pinData = PinData(
+                    id = "123",
+                    link = "",
+                    source = PinSource.PINTEREST,
+                    description = "",
+                    image = "",
+                    video = null
+                ),
+                downloadState = DownloadState.Idle,
+                onAction = {}
+            )
+        }
     }
 }

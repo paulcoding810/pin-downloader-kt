@@ -80,14 +80,12 @@ class PinterestExtractor : Extractor() {
         val baseUri = "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}"
 
         val response =
-            httpClient.use { client ->
-                client.get(apiUrl)
-                    .apply {
-                        if (status != HttpStatusCode.OK) {
-                            throw AppException.PinNotFoundError(apiUrl)
-                        }
+            httpClient.get(apiUrl)
+                .apply {
+                    if (status != HttpStatusCode.OK) {
+                        throw AppException.PinNotFoundError(apiUrl)
                     }
-            }
+                }
 
         val doc =
             Ksoup.parseInputStream(

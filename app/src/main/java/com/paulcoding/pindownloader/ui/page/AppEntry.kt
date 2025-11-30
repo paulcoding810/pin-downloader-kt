@@ -28,8 +28,6 @@ fun AppEntry() {
         animatedComposable(Route.HOME) {
             HomePage(viewHistory = {
                 navController.navigate(Route.HISTORY)
-            }, navToPremium = {
-                navController.navigate(Route.PREMIUM)
             })
         }
 

@@ -1,6 +1,7 @@
 package com.paulcoding.pindownloader.helper
 
 import android.content.Context
+import android.util.Log
 import com.paulcoding.pindownloader.AppException
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -29,27 +30,33 @@ class Downloader(private val httpClient: HttpClient) {
         fileName: String? = null,
         customHeaders: Map<String, String> = mapOf(),
     ): String {
+        Log.d(TAG, "Downloading $imageUrl")
+
         val name = fileName ?: getFileNameFromUrl(imageUrl)
         val file = File(getDownloadDir(context), name)
 
-        httpClient.use { client ->
-            client.get(imageUrl) {
+        httpClient
+            .get(imageUrl) {
                 headers {
                     customHeaders.forEach { (key, value) ->
                         append(key, value)
                     }
                 }
             }
-                .readRawBytes().let { bytes ->
-                    FileOutputStream(file).use { fos ->
-                        fos.write(bytes)
-                    }
+            .readRawBytes().let { bytes ->
+                FileOutputStream(file).use { fos ->
+                    fos.write(bytes)
                 }
-        }
+            }
+
 
         if (file.exists()) {
             return file.absolutePath
         }
         throw AppException.DownloadError(imageUrl)
+    }
+
+    companion object {
+        private val TAG = "Downloader"
     }
 }

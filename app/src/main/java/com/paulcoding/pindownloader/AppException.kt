@@ -9,5 +9,4 @@ sealed class AppException(messageRes: String) : Exception(messageRes) {
     class ParseJsonError(url: String) : AppException("Cannot parse JSON for $url")
     class MessageError : AppException("Cannot parse url from message")
     class UnknownError : AppException("Something went wrong")
-    class PremiumRequired : AppException("Premium Required")
 }

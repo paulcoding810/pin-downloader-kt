@@ -133,11 +133,11 @@ fun FetchResult(
                     val imageRequest =
                         ImageRequest
                             .Builder(LocalContext.current)
-                            .data(thumbnail)
+                            .data(image)
                             .crossfade(true)
                             .scale(Scale.FILL)
                             .diskCachePolicy(CachePolicy.ENABLED)
-                            .diskCacheKey(thumbnail)
+                            .diskCacheKey(id)
                             .run {
                                 if (source == PinSource.PIXIV) {
                                     httpHeaders(

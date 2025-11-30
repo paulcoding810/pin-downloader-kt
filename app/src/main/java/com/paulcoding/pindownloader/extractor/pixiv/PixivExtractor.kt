@@ -38,10 +38,7 @@ class PixivExtractor : Extractor() {
 
         return PinData(
             source = PinSource.PIXIV,
-            thumbnail = images["thumb"],
-            author = traverseObject<String>(response, listOf("illust", "{}", "userName")),
             description = traverseObject<String>(response, listOf("body", "title")),
-            date = traverseObject<String>(response, listOf("illust", "{}", "createDate")),
             image = images["original"],
             video = null,
             id = id,

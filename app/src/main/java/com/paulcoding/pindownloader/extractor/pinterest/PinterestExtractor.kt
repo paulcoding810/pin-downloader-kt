@@ -43,13 +43,10 @@ class PinterestExtractor : Extractor() {
             val id = traverseObject<String>(data, "entityId")
                 ?: throw (AppException.PinNotFoundError(link))
             val imageUrl = traverseObject<String>(data, "imageSpec_orig.url")
-            val thumbnail = traverseObject<String>(data, "imageSpec_236x.url")
             val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
                 data,
                 listOf("gridTitle")
             )
-            val author = traverseObject<String>(data, "closeupAttribution.fullName")
-                ?: traverseObject<String>(data, "originPinner.fullName")
             val videoUrl = traverseObject<String>(
                 data,
                 "videos.videoList.v720P.url",
@@ -69,10 +66,7 @@ class PinterestExtractor : Extractor() {
 
             val pinData =
                 PinData(
-                    thumbnail = thumbnail ?: imageUrl,
-                    author = author,
                     description = title,
-                    date = null,
                     source = PinSource.PINTEREST,
                     id = id,
                     link = link,

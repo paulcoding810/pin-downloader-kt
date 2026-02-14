@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.paulcoding.pindownloader"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.paulcoding.pindownloader"

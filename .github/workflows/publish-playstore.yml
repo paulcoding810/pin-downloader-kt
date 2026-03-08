@@ -23,8 +23,10 @@ jobs:
 
       - name: Generate key.properties
         run: |
-          echo ${{ secrets.KEY_PROPERTIES }} > key.properties
+          echo "$KEY_PROPERTIES" > key.properties
           chmod 600 key.properties
+        env:
+          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
 
       - name: Setup JDK
         uses: actions/setup-java@v4

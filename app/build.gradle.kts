@@ -13,8 +13,8 @@ android {
     defaultConfig {
         applicationId = "com.paulcoding.pindownloader"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
+        targetSdk = 35
+        versionCode = 2
         versionName = "1.0.2"
 
         testInstrumentationRunner = "com.paulcoding.pindownloader.KotestAndroidRunner"

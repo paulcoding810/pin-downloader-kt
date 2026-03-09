@@ -167,6 +167,7 @@ fun HomePage(
                             IconButton(onClick = {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 viewModel.clearPinData()
+                                text = ""
                             }) {
                                 Icon(
                                     modifier = Modifier.size(24.dp),

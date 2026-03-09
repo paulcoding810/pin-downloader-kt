@@ -21,8 +21,10 @@ jobs:
 
       - name: Generate key.properties
         run: |
-          echo ${{ secrets.KEY_PROPERTIES }} > key.properties
+          echo "$KEY_PROPERTIES" > key.properties
           chmod 600 key.properties
+        env:
+          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -35,14 +37,6 @@ jobs:
 
       - name: Build app
         run: ./gradlew assembleRelease
-
-      - name: Rename apks
-        run: |
-          mv app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk PinDownloader-${{ github.ref_name }}-arm64-v8a-release.apk
-          mv app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk PinDownloader-${{ github.ref_name }}-armeabi-v7a-release.apk
-          mv app/build/outputs/apk/release/app-universal-release-unsigned-signed.apk PinDownloader-${{ github.ref_name }}-universal-release.apk
-          mv app/build/outputs/apk/release/app-x86-release-unsigned-signed.apk PinDownloader-${{ github.ref_name }}-x86-release.apk
-          mv app/build/outputs/apk/release/app-x86_64-release-unsigned-signed.apk PinDownloader-${{ github.ref_name }}-x86_64-release.apk
 
       - name: Create changelog
         id: changelog
@@ -57,11 +51,6 @@ jobs:
         with:
           draft: true
           body: ${{ steps.changelog.outputs.changes }}
-          files: |
-            PinDownloader-${{ github.ref_name }}-arm64-v8a-release.apk
-            PinDownloader-${{ github.ref_name }}-armeabi-v7a-release.apk
-            PinDownloader-${{ github.ref_name }}-universal-release.apk
-            PinDownloader-${{ github.ref_name }}-x86-release.apk
-            PinDownloader-${{ github.ref_name }}-x86_64-release.apk
+          files: app/build/outputs/apk/release/*.apk
           fail_on_unmatched_files: true
           make_latest: true

@@ -1,7 +1,6 @@
 package com.paulcoding.pindownloader
 
 import android.content.Context
-import android.graphics.drawable.BitmapDrawable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.Bitmap
@@ -137,5 +136,9 @@ class MainViewModel(private val downloader: Downloader) : ViewModel() {
                 extract(link)
             }
         }
+    }
+
+    fun consumeDownloadState() {
+        _state.update { it.copy(downloadState = DownloadState.Idle) }
     }
 }

@@ -87,7 +87,9 @@ fun HomePage(
         viewModel.extractLink(text)
     }
 
-    DownloadEffect(downloadState, snackBarHostState)
+    DownloadEffect(downloadState, snackBarHostState) {
+        viewModel.consumeDownloadState()
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer =

@@ -7,10 +7,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -19,12 +24,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.paulcoding.pindownloader.component.AppExceptionText
 import com.paulcoding.pindownloader.component.DownloadEffect
-import com.paulcoding.pindownloader.component.LoadingOverlay
+import com.paulcoding.pindownloader.ui.component.Indicator
 import com.paulcoding.pindownloader.ui.page.home.FetchResult
 import org.koin.android.ext.android.inject
 
@@ -78,27 +84,40 @@ fun DownloadView(extractState: ExtractState, downloadState: DownloadState, onAct
         activity?.finish()
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }, containerColor = Color.Transparent) { paddingValues ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(bottom = 24.dp),
+                .padding(paddingValues),
             contentAlignment = Alignment.BottomCenter
         ) {
-            when (extractState) {
-                is ExtractState.Error -> {
-                    AppExceptionText(extractState.exception)
-                }
-                ExtractState.Idle -> {}
-                is ExtractState.Loading -> LoadingOverlay()
-                is ExtractState.Success ->
-                    FetchResult(
-                        pinData = extractState.pinData,
-                        downloadState = downloadState,
-                        showLoadingMaxSize = false,
-                        onAction = onAction,
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                when (extractState) {
+                    is ExtractState.Error -> {
+                        AppExceptionText(extractState.exception)
+                    }
+                    ExtractState.Idle -> {}
+                    is ExtractState.Loading -> Indicator(
+                        modifier = Modifier.size(64.dp)
                     )
+                    is ExtractState.Success ->
+                        FetchResult(
+                            pinData = extractState.pinData,
+                            downloadState = downloadState,
+                            showLoadingMaxSize = false,
+                            onAction = onAction,
+                        )
+                }
             }
         }
     }

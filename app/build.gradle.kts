@@ -52,11 +52,13 @@ android {
         debug {
             applicationIdSuffix = ".dev"
             resValue("string", "app_name", "Pin Downloader (Debug)")
+            resValue("string", "download_name", "Quick Download (Debug)")
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            resValue("string", "download_name", "Quick Download")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

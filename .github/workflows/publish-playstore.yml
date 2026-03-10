@@ -55,3 +55,4 @@ jobs:
           packageName: com.paulcoding.pindownloader
           releaseFiles: app/build/outputs/bundle/release/*.aab
           track: ${{ github.event.inputs.track }}
+          status: draft

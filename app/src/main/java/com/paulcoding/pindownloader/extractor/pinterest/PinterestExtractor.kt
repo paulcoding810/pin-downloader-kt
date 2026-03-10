@@ -31,47 +31,52 @@ class PinterestExtractor : Extractor() {
         response: JsonElement,
         link: String,
     ): PinData {
-        traverseObject<JsonElement>(
-            response,
-            "data.v3GetPinQuery.data".split('.')
-        )?.let { data ->
-            val id = traverseObject<String>(data, "entityId")
-                ?: throw (AppException.PinNotFoundError(link))
-            val imageUrl = traverseObject<String>(data, "imageSpec_orig.url") ?: traverseObject<String>(data, "images_orig.url")
-            val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
-                data,
-                listOf("gridTitle")
+        val data =
+            traverseObject<JsonElement>(
+                response,
+                "data.v3GetPinQuery.data".split('.')
             )
-            val videoUrl = traverseObject<String>(
-                data,
-                "videos.videoList.v720P.url",
-            ) ?: traverseObject<String>(
-                data,
-                "videos.videoList.V_HLSV3_MOBILE.url",
-            ) ?: traverseObject<String>(
-                data,
-                "storyPinData.pages.[].blocks.[].videoDataV2.videoList720P.v720P.url",
-            ) ?: traverseObject<String>(
-                data,
-                "storyPinData.pages.[].blocks.[].videoDataV2.videoListMobile.vHLSV3MOBILE.url"
-            )
-            if (videoUrl == null && imageUrl == null) {
-                throw AppException.PinNotFoundError(link)
-            }
-
-            val pinData =
-                PinData(
-                    description = title,
-                    source = PinSource.PINTEREST,
-                    id = id,
-                    link = link,
-                    video = videoUrl,
-                    image = imageUrl
+                ?: traverseObject<JsonElement>(
+                    response,
+                    "data.v3GetPinQueryv2.data".split('.')
                 )
-            return pinData
+                ?: throw AppException.ParseJsonError(link)
+
+        val id = traverseObject<String>(data, "entityId")
+            ?: throw (AppException.PinNotFoundError(link))
+        val imageUrl =
+            traverseObject<String>(data, "imageSpec_orig.url") ?: traverseObject<String>(data, "images_orig.url")
+        val title = traverseObject<String>(data, listOf("title")) ?: traverseObject<String>(
+            data,
+            listOf("gridTitle")
+        )
+        val videoUrl = traverseObject<String>(
+            data,
+            "videos.videoList.v720P.url",
+        ) ?: traverseObject<String>(
+            data,
+            "videos.videoList.V_HLSV3_MOBILE.url",
+        ) ?: traverseObject<String>(
+            data,
+            "storyPinData.pages.[].blocks.[].videoDataV2.videoList720P.v720P.url",
+        ) ?: traverseObject<String>(
+            data,
+            "storyPinData.pages.[].blocks.[].videoDataV2.videoListMobile.vHLSV3MOBILE.url"
+        )
+        if (videoUrl == null && imageUrl == null) {
+            throw AppException.PinNotFoundError(link)
         }
 
-        throw AppException.ParseJsonError(link)
+        val pinData =
+            PinData(
+                description = title,
+                source = PinSource.PINTEREST,
+                id = id,
+                link = link,
+                video = videoUrl,
+                image = imageUrl
+            )
+        return pinData
     }
 
     override suspend fun callApi(apiUrl: String): JsonElement {

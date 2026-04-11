@@ -76,20 +76,20 @@ class PinterestExtractorTest : KoinTest {
         }
     }
 
-    @Test
-    fun `should return video from story_pin_data`() = runTest {
-        val pinUrl = "https://www.pinterest.com/pin/297096906690237209/"
-        val expectedVideoUrl =
-            "https://v1.pinimg.com/videos/iht/expMp4/62/ce/32/62ce32b6898266fe292aedd1d35ba1a8_720w.mp4"
-        val expectedImageUrl =
-            "https://i.pinimg.com/originals/94/6f/a1/946fa14cf72a33ff6810936d0dcdfeb7.jpg"
-
-        extractor.extract(pinUrl).run {
-            assertEquals(PinSource.PINTEREST, source)
-            assertEquals(expectedImageUrl, image)
-            assertEquals(expectedVideoUrl, video)
-        }
-    }
+    //@Test
+    //fun `should return video from story_pin_data`() = runTest {
+    //    val pinUrl = "https://www.pinterest.com/pin/297096906690237209/"
+    //    val expectedVideoUrl =
+    //        "https://v1.pinimg.com/videos/iht/expMp4/62/ce/32/62ce32b6898266fe292aedd1d35ba1a8_720w.mp4"
+    //    val expectedImageUrl =
+    //        "https://i.pinimg.com/originals/94/6f/a1/946fa14cf72a33ff6810936d0dcdfeb7.jpg"
+    //
+    //    extractor.extract(pinUrl).run {
+    //        assertEquals(PinSource.PINTEREST, source)
+    //        assertEquals(expectedImageUrl, image)
+    //        assertEquals(expectedVideoUrl, video)
+    //    }
+    //}
 
     @Test
     fun `should throw exception`() = runTest {

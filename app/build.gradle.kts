@@ -18,7 +18,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.paulcoding.pindownloader"
-    compileSdk = 35
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
